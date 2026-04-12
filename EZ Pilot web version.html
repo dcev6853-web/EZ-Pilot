@@ -7,7 +7,7 @@
 <meta name="description" content="EZ Pilot is your autonomous AI agent. Run ads, manage docs, book trips, track budgets, and reply to messages — all on autopilot.">
 
 <!-- ===== HTTPS / Canonical / Security ===== -->
-<link rel="canonical" href="https://ezpilot.com/">
+<link rel="canonical" href="https://ez-pilot.com/">
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="theme-color" content="#FFEB3B">
@@ -15,7 +15,7 @@
 <!-- Open Graph -->
 <meta property="og:title" content="EZ Pilot — Your Autonomous AI Agent">
 <meta property="og:description" content="Run ads, manage docs, book trips, and reply to messages on autopilot.">
-<meta property="og:url" content="https://ezpilot.com/">
+<meta property="og:url" content="https://ez-pilot.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="EZ Pilot">
 <meta name="twitter:card" content="summary_large_image">
@@ -77,6 +77,48 @@
     transition:transform .12s;
   }
   .login-cta:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(244,208,0,.4)}
+  .login-cta:disabled{background:#f5f5f5;color:var(--muted-2);border-color:var(--line);cursor:not-allowed;transform:none;box-shadow:none}
+  .terms-check{display:flex;align-items:flex-start;gap:9px;margin:10px 0 6px;font-size:12px;color:var(--muted);text-align:left;cursor:pointer}
+  .terms-check input{margin-top:3px;width:16px;height:16px;accent-color:var(--yellow-deep);flex-shrink:0;cursor:pointer}
+  .terms-check span{line-height:1.45}
+  .terms-check a{color:var(--yellow-deep);font-weight:700;text-decoration:underline}
+
+  /* Upload + attachments + Make workflow badge */
+  .attach-chip{
+    display:inline-flex;align-items:center;gap:6px;
+    background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;
+    padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;margin-bottom:6px;
+  }
+  .make-chip{
+    display:inline-flex;align-items:center;gap:5px;
+    background:#fef3c7;color:#92400e;border:1px solid #fde68a;
+    padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;margin-bottom:6px;margin-left:5px;
+  }
+  .attach-btn{
+    width:38px;height:38px;border-radius:11px;background:#fff;border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;
+  }
+  .attach-btn:hover{background:#fafafa}
+  .upload-counter{font-size:10px;color:var(--muted-2);padding:2px 8px;background:#f5f5f5;border-radius:999px;font-weight:600}
+  .context-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;padding:0 4px}
+  .context-pill{
+    background:#fafafa;border:1px solid var(--line);padding:6px 12px;border-radius:999px;
+    font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;
+  }
+  .context-pill.active{background:var(--yellow);border-color:var(--yellow-deep);color:var(--ink)}
+  .context-pill:hover{background:#f5f5f5}
+
+  /* Integration status */
+  .int-status{
+    display:inline-flex;align-items:center;gap:4px;
+    font-size:9px;font-weight:700;color:var(--muted-2);
+    margin-left:6px;
+  }
+  .int-status.ok{color:var(--green)}
+  .int-status.bad{color:var(--red)}
+  .int-status::before{
+    content:"";width:5px;height:5px;border-radius:50%;background:currentColor;
+  }
   .ldivider{display:flex;align-items:center;gap:10px;margin:22px 0 14px;color:var(--muted-2);font-size:11px;font-weight:600}
   .ldivider::before,.ldivider::after{content:"";flex:1;height:1px;background:var(--line)}
   .social-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
@@ -365,21 +407,25 @@
     <svg class="lc-logo"><use href="#ezlogo"/></svg>
     <h1>Welcome to EZ Pilot</h1>
     <div class="sub">Your autonomous AI agent</div>
-    <div class="domain-pill">🔒 https://ezpilot.com</div>
+    <div class="domain-pill">🔒 https://ez-pilot.com</div>
     <div class="login-tabs">
       <button class="login-tab active" onclick="switchLoginTab(this,'email')">Email</button>
       <button class="login-tab" onclick="switchLoginTab(this,'phone')">Phone</button>
     </div>
     <input type="email" class="login-input" id="login-id" placeholder="you@example.com">
     <input type="password" class="login-input" placeholder="Password">
-    <button class="login-cta" onclick="doLogin()">Sign In →</button>
+    <label class="terms-check">
+      <input type="checkbox" id="terms-accept" onchange="updateLoginButton()">
+      <span>I agree to the <a href="/terms.html" target="_blank">Terms of Service</a> and <a href="/privacy.html" target="_blank">Privacy Policy</a></span>
+    </label>
+    <button class="login-cta" id="login-cta" onclick="doLogin()" disabled>Sign In →</button>
     <div class="ldivider">OR CONTINUE WITH</div>
     <div class="social-grid">
       <button class="social-btn" onclick="doLogin()">G&nbsp; Google</button>
       <button class="social-btn" onclick="doLogin()">f&nbsp; Facebook</button>
       <button class="social-btn" onclick="doLogin()">⊞&nbsp; Microsoft</button>
     </div>
-    <div class="login-foot">By continuing you agree to Terms & Privacy.<br>New here? <strong>1-month Pro trial included</strong>.</div>
+    <div class="login-foot">You must agree to the Terms & Privacy Policy to sign in.<br>New here? <strong>1-month Pro trial included</strong>.</div>
   </div>
 </div>
 
@@ -388,7 +434,7 @@
   <aside class="sidebar">
     <div class="logo">
       <svg><use href="#ezlogo"/></svg>
-      <div class="logo-text"><div class="name">EZ Pilot</div><div class="domain">ezpilot.com</div></div>
+      <div class="logo-text"><div class="name">EZ Pilot</div><div class="domain">ez-pilot.com</div></div>
     </div>
     <nav class="nav">
       <div class="nav-item active" data-screen="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Home</div>
@@ -406,7 +452,7 @@
     </div>
     <div class="user-row" onclick="logout()">
       <div class="user-avatar">A</div>
-      <div class="user-info"><div class="un">Alex Chen</div><div class="ue">alex@ezpilot.com</div></div>
+      <div class="user-info"><div class="un">Alex Chen</div><div class="ue">alex@ez-pilot.com</div></div>
       <div class="logout-icon">⏻</div>
     </div>
   </aside>
@@ -414,7 +460,7 @@
   <!-- ===== MAIN ===== -->
   <main class="main">
     <header class="topbar">
-      <div class="crumb">🔒 <strong>ezpilot.com</strong> · autonomous AI agent</div>
+      <div class="crumb">🔒 <strong>ez-pilot.com</strong> · autonomous AI agent</div>
       <div class="right">
         <button class="icon-btn">🔔</button>
         <button class="icon-btn">⚙️</button>
@@ -475,14 +521,26 @@
         <div class="chat-msgs" id="msgs">
           <div class="msg user"><div class="avatar user">U</div><div class="bubble">what's the capital of australia?</div></div>
           <div class="msg"><div class="avatar bot"><svg viewBox="0 0 1024 1024" style="width:24px;height:24px"><use href="#ezlogo"/></svg></div><div class="bubble">Canberra. It was chosen as a compromise between Sydney and Melbourne in 1908. Anything else you'd like to know?</div></div>
+          <div class="msg user"><div class="avatar user">U</div><div class="bubble">suggest what i should do to save $85 more next month</div></div>
+          <div class="msg"><div class="avatar bot"><svg viewBox="0 0 1024 1024" style="width:24px;height:24px"><use href="#ezlogo"/></svg></div><div class="bubble"><span class="tool-chip">✓ pulled_budget</span><span class="make-chip">⚙️ make.com workflow</span><br>Looking at your last 30 days: <strong>$85.50 on groceries</strong>, <strong>$62.30 on dining out</strong>, and <strong>$45 on Uber</strong>. Three quick wins to save $85+ next month:<br>• <strong>Cut dining out in half</strong> → save ~$31<br>• <strong>Walk/transit 2× per week instead of Uber</strong> → save ~$25<br>• <strong>Meal-plan Sundays to cut grocery waste</strong> → save ~$30<br><br>Want me to set a weekly Sunday reminder and a $200 dining-out cap?</div></div>
+          <div class="msg user"><div class="avatar user">U</div><div class="bubble">yes set the reminder</div></div>
+          <div class="msg"><div class="avatar bot"><svg viewBox="0 0 1024 1024" style="width:24px;height:24px"><use href="#ezlogo"/></svg></div><div class="bubble"><span class="tool-chip">✓ calendar.create</span><span class="make-chip">⚙️ make.com workflow</span><br>Done. Recurring Sunday 6 PM "Meal plan for the week" added to your Google Calendar, and a $200 dining-out budget cap is now live — I'll alert you at 80%.</div></div>
           <div class="msg user"><div class="avatar user">U</div><div class="bubble">write an essay about the american revolution in a brand new google docs</div></div>
           <div class="msg"><div class="avatar bot"><svg viewBox="0 0 1024 1024" style="width:24px;height:24px"><use href="#ezlogo"/></svg></div><div class="bubble"><span class="tool-chip">✓ google_docs.create</span><br>Created <strong>"American Revolution Essay"</strong> in your Google Docs and wrote a 1,200-word piece covering the causes, key battles, founding figures, and aftermath. <a href="#" style="color:#1e40af;text-decoration:underline">Open doc →</a></div></div>
           <div class="msg user"><div class="avatar user">U</div><div class="bubble">launch a TikTok ads campaign, $50/day, target Gen Z in the US</div></div>
           <div class="msg"><div class="avatar bot"><svg viewBox="0 0 1024 1024" style="width:24px;height:24px"><use href="#ezlogo"/></svg></div><div class="bubble"><span class="tool-chip">✓ tiktok_ads.create</span><br>Setting up <strong>TikTok Ads campaign</strong>. Budget: $50/day. Audience: Gen Z, US. Generating 3 video creatives now. Will go live in ~5 minutes — track on the Ads page.</div></div>
         </div>
         <div class="composer">
+          <div class="context-row">
+            <button class="context-pill" data-context="budget">💰 Pull budget</button>
+            <button class="context-pill" data-context="tasks">📋 Pull tasks</button>
+            <button class="context-pill" data-context="ads">📢 Pull ads</button>
+            <span class="upload-counter" id="upload-counter" style="margin-left:auto">📎 0/15 files today</span>
+          </div>
           <div class="composer-inner">
-            <input type="text" placeholder="Ask anything or command me to do anything…" id="chat-input">
+            <button class="attach-btn" onclick="document.getElementById('file-input').click()" title="Attach file (any type)">📎</button>
+            <input type="file" id="file-input" style="display:none" onchange="handleFileUpload(event)">
+            <input type="text" placeholder="Ask anything or command me — I can pull from your budget, tasks & ads…" id="chat-input">
             <button class="send-btn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
@@ -592,7 +650,7 @@
         <div class="page-head"><h1>Integrations</h1></div>
         <div class="live-banner">
           <div class="live-dot"></div>
-          <div class="txt"><div class="t" id="liveCount">services connected</div><div class="s">Real AI auto-detects activity → you validate → it executes automatically</div></div>
+          <div class="txt"><div class="t" id="liveCount">services connected</div><div class="s">Auto-detect · checks OAuth token validity every 5 min · pings provider API to confirm the account is live</div></div>
           <div class="count">LIVE</div>
         </div>
         <div class="int-top">
@@ -656,11 +714,11 @@
         <div class="int-section">
           <h2>Productivity & Social <span class="count-pill">12</span></h2>
           <div class="int-grid">
-            <div class="int-card"><div class="name">Gmail</div><div class="desc">gmail.googleapis.com</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
-            <div class="int-card"><div class="name">Google Docs</div><div class="desc">Docs API</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
-            <div class="int-card"><div class="name">Calendar</div><div class="desc">Google & Apple</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
-            <div class="int-card"><div class="name">Notion</div><div class="desc">api.notion.com</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
-            <div class="int-card"><div class="name">GitHub</div><div class="desc">api.github.com</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
+            <div class="int-card"><div class="name">Gmail <span class="int-status ok" title="Token valid · verified 2m ago">ACTIVE</span></div><div class="desc">gmail.googleapis.com</div><button class="int-toggle-btn itb-live" data-state="live" data-service="gmail">LIVE</button></div>
+            <div class="int-card"><div class="name">Google Docs <span class="int-status ok" title="Token valid">ACTIVE</span></div><div class="desc">Docs API</div><button class="int-toggle-btn itb-live" data-state="live" data-service="google_docs">LIVE</button></div>
+            <div class="int-card"><div class="name">Calendar <span class="int-status ok" title="Token valid">ACTIVE</span></div><div class="desc">Google & Apple</div><button class="int-toggle-btn itb-live" data-state="live" data-service="calendar">LIVE</button></div>
+            <div class="int-card"><div class="name">Notion <span class="int-status ok" title="Token valid">ACTIVE</span></div><div class="desc">api.notion.com</div><button class="int-toggle-btn itb-live" data-state="live" data-service="notion">LIVE</button></div>
+            <div class="int-card"><div class="name">GitHub <span class="int-status ok" title="Token valid">ACTIVE</span></div><div class="desc">api.github.com</div><button class="int-toggle-btn itb-live" data-state="live" data-service="github">LIVE</button></div>
             <div class="int-card"><div class="name">Trello</div><div class="desc">api.trello.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
             <div class="int-card"><div class="name">Instagram</div><div class="desc">graph.facebook.com/v19</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
             <div class="int-card"><div class="name">LinkedIn</div><div class="desc">api.linkedin.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
@@ -721,7 +779,7 @@
               <li>50+ integrations</li>
             </ul>
             <button class="cta cta-upgrade">Start Free Trial →</button>
-            <div class="pay-link">Monthly link: <a href="https://pay.ezpilot.com/pro/monthly">pay.ezpilot.com/pro/monthly</a></div>
+            <div class="pay-link">Monthly link: <a href="https://pay.ez-pilot.com/pro/monthly">pay.ez-pilot.com/pro/monthly</a></div>
           </div>
 
           <div class="plan max">
@@ -743,7 +801,7 @@
               <li>Premium support</li>
             </ul>
             <button class="cta cta-max">Upgrade to Max →</button>
-            <div class="pay-link">Monthly link: <a href="https://pay.ezpilot.com/max/monthly">pay.ezpilot.com/max/monthly</a></div>
+            <div class="pay-link">Monthly link: <a href="https://pay.ez-pilot.com/max/monthly">pay.ez-pilot.com/max/monthly</a></div>
           </div>
         </div>
       </section>
@@ -771,8 +829,25 @@
     inp.placeholder = type === 'phone' ? '+1 (555) 123-4567' : 'you@example.com';
     inp.type = type === 'phone' ? 'tel' : 'email';
   }
-  function doLogin(){ document.getElementById('login-overlay').style.display = 'none'; }
-  function logout(){ document.getElementById('login-overlay').style.display = 'flex'; }
+  function updateLoginButton(){
+    const accepted = document.getElementById('terms-accept').checked;
+    document.getElementById('login-cta').disabled = !accepted;
+  }
+  function doLogin(){
+    const accepted = document.getElementById('terms-accept').checked;
+    if(!accepted){
+      alert('You must agree to the Terms of Service and Privacy Policy to sign in.');
+      return;
+    }
+    // In production: call signInEmail / signInGoogle / signInMicrosoft from firebase-client.js
+    // which writes termsAcceptedAt: serverTimestamp() to Firestore.
+    document.getElementById('login-overlay').style.display = 'none';
+    startIntegrationAutoDetect();
+  }
+  function logout(){
+    document.getElementById('login-overlay').style.display = 'flex';
+    stopIntegrationAutoDetect();
+  }
 
   // ===== PRICING =====
   let isAnnual = true;
@@ -782,17 +857,25 @@
     document.getElementById('lbl-monthly').style.color = isAnnual ? 'var(--muted)' : 'var(--ink)';
     document.getElementById('lbl-annual').style.color = isAnnual ? 'var(--ink)' : 'var(--muted)';
     if(isAnnual){
+      // Annual: 1-month free trial
+      document.getElementById('pro-strike').style.display = 'inline';
       document.getElementById('pro-strike').textContent = '$19';
       document.getElementById('pro-price').textContent = '$0';
       document.getElementById('pro-per').textContent = '/first month';
       document.getElementById('pro-note').innerHTML = 'Then <strong>$19/mo</strong> billed annually ($228/yr) · 12-month commitment, no mid-term cancel';
+      document.querySelector('#pricing .plan.featured .save-tag').innerHTML = '🎉 1-MONTH FREE TRIAL';
+      document.querySelector('#pricing .plan.featured .save-tag').style.display = 'block';
+      document.querySelector('#pricing .plan.featured .trial-callout').style.display = 'block';
       document.getElementById('max-price').textContent = '$90';
       document.getElementById('max-note').innerHTML = 'Billed annually ($1,080/yr) · save $120/yr · 12-month commitment';
     } else {
-      document.getElementById('pro-strike').textContent = '$23';
-      document.getElementById('pro-price').textContent = '$0';
-      document.getElementById('pro-per').textContent = '/first month';
-      document.getElementById('pro-note').innerHTML = 'Then <strong>$23/mo</strong> billed monthly · cancel anytime';
+      // Monthly: no free trial
+      document.getElementById('pro-strike').style.display = 'none';
+      document.getElementById('pro-price').textContent = '$23';
+      document.getElementById('pro-per').textContent = '/month';
+      document.getElementById('pro-note').innerHTML = 'Billed monthly · cancel anytime · <strong>no free trial on monthly</strong>';
+      document.querySelector('#pricing .plan.featured .save-tag').style.display = 'none';
+      document.querySelector('#pricing .plan.featured .trial-callout').style.display = 'none';
       document.getElementById('max-price').textContent = '$100';
       document.getElementById('max-note').innerHTML = 'Billed monthly · cancel anytime';
     }
@@ -852,33 +935,64 @@
   updateConnectAllBtn(); updateLiveCount();
 
   // ===== CHAT (real AI models via /api/chat backend proxy) =====
-  // Browser → /api/chat → your backend (holds API keys) → official model endpoint.
-  // See ai-models.js for the official endpoints and request shapes per provider:
-  //   Anthropic   → https://api.anthropic.com/v1/messages   (claude-opus-4-6, claude-sonnet-4-6)
-  //   OpenAI      → https://api.openai.com/v1/chat/completions (gpt-5, o1)
-  //   Google      → https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent
-  //   xAI         → https://api.x.ai/v1/chat/completions    (grok-4)
-  //   DeepSeek    → https://api.deepseek.com/v1/chat/completions (deepseek-reasoner = R2)
-  //   Mistral     → https://api.mistral.ai/v1/chat/completions
-  //   Perplexity  → https://api.perplexity.ai/chat/completions (sonar-pro)
   const conversation = [];
+  const activeContext = new Set();
+  const pendingAttachments = [];
+  let uploadsToday = 0;
+  const UPLOAD_LIMIT = 15; // Pro; backend enforces real limit
+
+  // Context pull pills
+  document.querySelectorAll('.context-pill').forEach(p => {
+    p.addEventListener('click', () => {
+      const c = p.dataset.context;
+      if(activeContext.has(c)){ activeContext.delete(c); p.classList.remove('active'); }
+      else { activeContext.add(c); p.classList.add('active'); }
+    });
+  });
+
+  // File upload (any type, Pro 15/24h, Max unlimited)
+  async function handleFileUpload(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    if(uploadsToday >= UPLOAD_LIMIT){
+      alert(`Pro plan limit: ${UPLOAD_LIMIT} files / 24h reached. Upgrade to Max for unlimited uploads.`);
+      return;
+    }
+    pendingAttachments.push({ name: file.name, size: file.size, type: file.type, file });
+    uploadsToday++;
+    document.getElementById('upload-counter').textContent = `📎 ${uploadsToday}/${UPLOAD_LIMIT} files today`;
+    // Show chip in composer
+    const chipBar = document.createElement('div');
+    chipBar.style.cssText = 'padding:8px 4px 0;display:flex;gap:6px;flex-wrap:wrap';
+    chipBar.innerHTML = `<span class="attach-chip">📎 ${file.name} (${Math.round(file.size/1024)} KB)</span>`;
+    document.querySelector('#chat .composer').insertBefore(chipBar, document.querySelector('#chat .composer-inner'));
+    // In production: upload via apiFetch('/api/upload', { method:'POST', body: formData })
+    e.target.value = '';
+  }
 
   async function callRealModel(model, userMessage){
     conversation.push({ role: 'user', content: userMessage });
     try {
+      // In production: use apiFetch from firebase-client.js so Firebase ID token is attached
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, messages: conversation }),
+        body: JSON.stringify({
+          model,
+          messages: conversation,
+          context: { pull: Array.from(activeContext) },
+          attachments: pendingAttachments.map(a => ({ name: a.name, type: a.type })),
+        }),
       });
       if(!res.ok) throw new Error(`API ${res.status}`);
       const data = await res.json();
       const text = data.text || '(empty response)';
       conversation.push({ role: 'assistant', content: text });
+      pendingAttachments.length = 0;
       return text;
     } catch(err){
-      // Demo fallback when backend isn't deployed yet
-      const fallback = `[${model} · demo mode] On it — I'll answer your question and execute any actions, then add follow-ups to your tasks. Wire /api/chat to your backend proxy to enable real responses.`;
+      const contextNote = activeContext.size ? ` · pulling ${Array.from(activeContext).join(', ')}` : '';
+      const fallback = `[${model}${contextNote} · demo mode] Deploy /api/chat on your backend to enable real AI responses. The backend will hold your API keys and forward to the official model endpoint.`;
       conversation.push({ role: 'assistant', content: fallback });
       return fallback;
     }
@@ -891,8 +1005,13 @@
   async function sendMsg(){
     const v = input.value.trim();
     if(!v) return;
-    msgs.insertAdjacentHTML('beforeend', `<div class="msg user"><div class="avatar user">U</div><div class="bubble">${v.replace(/</g,'&lt;')}</div></div>`);
+    const attachChips = pendingAttachments.map(a => `<span class="attach-chip">📎 ${a.name}</span>`).join(' ');
+    const ctxChips = Array.from(activeContext).map(c => `<span class="tool-chip">🔍 pulling ${c}</span>`).join(' ');
+    const makeChip = activeContext.size ? '<span class="make-chip">⚙️ make.com workflow</span>' : '';
+    msgs.insertAdjacentHTML('beforeend', `<div class="msg user"><div class="avatar user">U</div><div class="bubble">${attachChips}${attachChips?'<br>':''}${v.replace(/</g,'&lt;')}</div></div>`);
     input.value = '';
+    // Clear attach chip bar visual
+    document.querySelectorAll('#chat .composer > div:not(.composer-inner):not(.context-row)').forEach(d => d.remove());
     msgs.scrollTop = msgs.scrollHeight;
     msgs.insertAdjacentHTML('beforeend', `<div class="msg typing" id="typing-ind">${botAvatar}<div class="bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`);
     msgs.scrollTop = msgs.scrollHeight;
@@ -900,11 +1019,48 @@
     const model = document.getElementById('model-select').value;
     const reply = await callRealModel(model, v);
     document.getElementById('typing-ind')?.remove();
-    msgs.insertAdjacentHTML('beforeend', `<div class="msg">${botAvatar}<div class="bubble">${reply.replace(/</g,'&lt;')}</div></div>`);
+    msgs.insertAdjacentHTML('beforeend', `<div class="msg">${botAvatar}<div class="bubble">${ctxChips}${makeChip}${(ctxChips||makeChip)?'<br>':''}${reply.replace(/</g,'&lt;')}</div></div>`);
     msgs.scrollTop = msgs.scrollHeight;
   }
   input?.addEventListener('keydown', e => { if(e.key === 'Enter') sendMsg(); });
   document.querySelector('.send-btn')?.addEventListener('click', sendMsg);
+
+  // ===== AUTO-DETECT INTEGRATIONS =====
+  // Polls /api/integrations/verify for each connected service every 5 min.
+  // Backend pings the actual provider API (gmail.googleapis.com, github.com, etc)
+  // to confirm the OAuth token is live AND the account is still valid.
+  let autoDetectTimer = null;
+  async function checkIntegration(card){
+    const btn = card.querySelector('.int-toggle-btn');
+    const service = btn?.dataset.service;
+    const statusEl = card.querySelector('.int-status');
+    if(!service || btn.dataset.state === 'disconnected') return;
+    try {
+      const res = await fetch('/api/integrations/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ service }),
+      });
+      const data = await res.json();
+      if(statusEl){
+        statusEl.classList.toggle('ok', data.valid);
+        statusEl.classList.toggle('bad', !data.valid);
+        statusEl.textContent = data.valid ? 'ACTIVE' : 'EXPIRED';
+        statusEl.title = data.valid ? 'Token valid, account live' : `Re-auth needed: ${data.reason}`;
+      }
+    } catch(e){ /* offline / backend not deployed — keep existing state */ }
+  }
+  function startIntegrationAutoDetect(){
+    const run = () => {
+      document.querySelectorAll('.int-card').forEach(checkIntegration);
+    };
+    run();
+    autoDetectTimer = setInterval(run, 5 * 60 * 1000); // every 5 min
+  }
+  function stopIntegrationAutoDetect(){
+    if(autoDetectTimer) clearInterval(autoDetectTimer);
+    autoDetectTimer = null;
+  }
 </script>
 </body>
 </html>
