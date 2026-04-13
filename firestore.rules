@@ -1,0 +1,33 @@
+rules_version = '2';
+
+// =================================================================
+// EZ Pilot — Firestore Security Rules (ez-pilot.com)
+// Users can only read/write their own data.
+// Deploy with: firebase deploy --only firestore:rules
+// =================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // User profile: /users/{uid}
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      // Subcollections: tasks, budget, campaigns, files, chat_log, integrations
+      match /{subcollection}/{docId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // Public plans/pricing doc (read-only for everyone)
+    match /public/{doc=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Default deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

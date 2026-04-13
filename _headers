@@ -1,0 +1,32 @@
+# =================================================================
+# EZ Pilot — HTTP security headers for ez-pilot.com
+# Drop this file in the root of your deploy (Netlify/Cloudflare Pages)
+# =================================================================
+
+/*
+  # Force HTTPS for one full year, include subdomains, eligible for HSTS preload
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+
+  # Clickjacking protection
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'
+
+  # MIME-sniff protection
+  X-Content-Type-Options: nosniff
+
+  # Referrer policy
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # Permissions
+  Permissions-Policy: camera=(), microphone=(self), geolocation=(self), payment=(self)
+
+  # Cross-origin
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+
+  # Cache static assets aggressively (override below for HTML)
+  Cache-Control: public, max-age=3600
+
+# Never cache the HTML shell — users should always get the latest
+/*.html
+  Cache-Control: no-cache, must-revalidate
