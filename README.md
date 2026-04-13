@@ -1,2 +1,1066 @@
-# ez-pilot-website
-the web version of ez pilot
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EZ Pilot — Your Autonomous AI Agent</title>
+<meta name="description" content="EZ Pilot is your autonomous AI agent. Run ads, manage docs, book trips, track budgets, and reply to messages — all on autopilot.">
+
+<!-- ===== HTTPS / Canonical / Security ===== -->
+<link rel="canonical" href="https://ez-pilot.com/">
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="theme-color" content="#FFEB3B">
+
+<!-- Open Graph -->
+<meta property="og:title" content="EZ Pilot — Your Autonomous AI Agent">
+<meta property="og:description" content="Run ads, manage docs, book trips, and reply to messages on autopilot.">
+<meta property="og:url" content="https://ez-pilot.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="EZ Pilot">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@ezpilot">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#FFEB3B;--yellow-soft:#FFF7B8;--yellow-deep:#F4D000;
+    --ink:#0A0A0A;--ink-2:#2a2a2a;--muted:#6b6b6b;--muted-2:#9a9a9a;
+    --line:#ececec;--bg:#fff;--card:#fafafa;
+    --green:#10b981;--red:#ef4444;--blue:#3b82f6;--purple:#8b5cf6;--orange:#f59e0b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:'Plus Jakarta Sans',-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased;overflow:hidden}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,textarea,select{font-family:inherit;outline:none;border:none;background:none;color:inherit}
+  a{color:inherit;text-decoration:none}
+
+  .app{display:flex;height:100vh;width:100vw}
+
+  /* ===== LOGIN OVERLAY ===== */
+  .login-overlay{
+    position:fixed;inset:0;z-index:1000;
+    background:linear-gradient(135deg,#fff,#fff8d8 50%,#fff 100%);
+    display:flex;align-items:center;justify-content:center;
+    animation:fade .4s;
+  }
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .login-card{
+    width:440px;background:#fff;border:1px solid var(--line);
+    border-radius:24px;padding:42px 44px;
+    box-shadow:0 30px 80px rgba(0,0,0,.12);text-align:center;
+  }
+  .login-card .lc-logo{width:72px;height:72px;margin:0 auto 18px;animation:logoIn .6s cubic-bezier(.2,.8,.2,1)}
+  @keyframes logoIn{from{opacity:0;transform:translateY(-8px) scale(.85)}to{opacity:1;transform:none}}
+  .login-card h1{font-size:28px;font-weight:800;letter-spacing:-0.02em}
+  .login-card .sub{font-size:13px;color:var(--muted);margin-top:6px}
+  .login-card .domain-pill{
+    display:inline-block;margin-top:10px;
+    background:#f5f5f5;padding:4px 10px;border-radius:999px;
+    font-size:11px;color:var(--muted-2);font-weight:600;
+  }
+  .login-tabs{display:flex;background:#f5f5f5;border-radius:11px;padding:4px;margin:24px 0 12px}
+  .login-tab{flex:1;padding:9px;font-size:12px;font-weight:700;border-radius:8px;color:var(--muted)}
+  .login-tab.active{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  .login-input{
+    width:100%;background:#fafafa;border:1px solid var(--line);
+    border-radius:12px;padding:13px 16px;font-size:13px;margin-bottom:9px;
+  }
+  .login-input:focus{border-color:var(--yellow-deep);background:#fff}
+  .login-cta{
+    width:100%;background:var(--yellow);color:var(--ink);
+    border:1px solid var(--yellow-deep);
+    padding:14px;border-radius:12px;font-weight:800;font-size:14px;margin-top:6px;
+    transition:transform .12s;
+  }
+  .login-cta:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(244,208,0,.4)}
+  .login-cta:disabled{background:#f5f5f5;color:var(--muted-2);border-color:var(--line);cursor:not-allowed;transform:none;box-shadow:none}
+  .terms-check{display:flex;align-items:flex-start;gap:9px;margin:10px 0 6px;font-size:12px;color:var(--muted);text-align:left;cursor:pointer}
+  .terms-check input{margin-top:3px;width:16px;height:16px;accent-color:var(--yellow-deep);flex-shrink:0;cursor:pointer}
+  .terms-check span{line-height:1.45}
+  .terms-check a{color:var(--yellow-deep);font-weight:700;text-decoration:underline}
+
+  /* Upload + attachments + Make workflow badge */
+  .attach-chip{
+    display:inline-flex;align-items:center;gap:6px;
+    background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;
+    padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;margin-bottom:6px;
+  }
+  .make-chip{
+    display:inline-flex;align-items:center;gap:5px;
+    background:#fef3c7;color:#92400e;border:1px solid #fde68a;
+    padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;margin-bottom:6px;margin-left:5px;
+  }
+  .attach-btn{
+    width:38px;height:38px;border-radius:11px;background:#fff;border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;
+  }
+  .attach-btn:hover{background:#fafafa}
+  .upload-counter{font-size:10px;color:var(--muted-2);padding:2px 8px;background:#f5f5f5;border-radius:999px;font-weight:600}
+  .context-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;padding:0 4px}
+  .context-pill{
+    background:#fafafa;border:1px solid var(--line);padding:6px 12px;border-radius:999px;
+    font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;
+  }
+  .context-pill.active{background:var(--yellow);border-color:var(--yellow-deep);color:var(--ink)}
+  .context-pill:hover{background:#f5f5f5}
+
+  /* Integration status */
+  .int-status{
+    display:inline-flex;align-items:center;gap:4px;
+    font-size:9px;font-weight:700;color:var(--muted-2);
+    margin-left:6px;
+  }
+  .int-status.ok{color:var(--green)}
+  .int-status.bad{color:var(--red)}
+  .int-status::before{
+    content:"";width:5px;height:5px;border-radius:50%;background:currentColor;
+  }
+  .ldivider{display:flex;align-items:center;gap:10px;margin:22px 0 14px;color:var(--muted-2);font-size:11px;font-weight:600}
+  .ldivider::before,.ldivider::after{content:"";flex:1;height:1px;background:var(--line)}
+  .social-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .social-btn{
+    background:#fff;border:1px solid var(--line);
+    border-radius:12px;padding:12px;font-size:12px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    transition:all .12s;
+  }
+  .social-btn:hover{border-color:#bbb;background:#fafafa}
+  .login-foot{font-size:11px;color:var(--muted-2);margin-top:18px;line-height:1.5}
+  .login-foot strong{color:var(--yellow-deep)}
+
+  /* ===== SIDEBAR ===== */
+  .sidebar{width:230px;flex-shrink:0;border-right:1px solid var(--line);display:flex;flex-direction:column;padding:22px 16px;background:#fff}
+  .logo{display:flex;align-items:center;gap:11px;padding:0 8px;margin-bottom:24px}
+  .logo svg{width:34px;height:34px;flex-shrink:0}
+  .logo-text{display:flex;flex-direction:column;line-height:1.1}
+  .logo-text .name{font-weight:800;font-size:17px;letter-spacing:-0.01em}
+  .logo-text .domain{font-size:10px;color:var(--muted-2);font-weight:600;margin-top:2px}
+
+  .nav{display:flex;flex-direction:column;gap:4px;flex:1}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;color:var(--ink-2);font-weight:500;font-size:14px;transition:background .15s;cursor:pointer}
+  .nav-item:hover{background:#f5f5f5}
+  .nav-item.active{background:var(--yellow);color:var(--ink);font-weight:700}
+  .nav-item svg{width:16px;height:16px;flex-shrink:0}
+
+  .plan-card{background:var(--yellow-soft);border:1px solid var(--yellow-deep);border-radius:12px;padding:14px;margin-top:12px}
+  .plan-card .title{font-weight:700;font-size:13px}
+  .plan-card .sub{font-size:11px;color:var(--muted);margin-top:2px;margin-bottom:10px;line-height:1.4}
+  .plan-card button{width:100%;background:var(--yellow);color:var(--ink);border:1px solid var(--yellow-deep);padding:9px;border-radius:8px;font-weight:700;font-size:12px}
+  .user-row{display:flex;align-items:center;gap:10px;padding:10px 8px;margin-top:14px;border-top:1px solid var(--line);padding-top:14px;cursor:pointer}
+  .user-avatar{width:32px;height:32px;border-radius:50%;background:#0a0a0a;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
+  .user-info .un{font-size:12px;font-weight:700}
+  .user-info .ue{font-size:10px;color:var(--muted-2)}
+  .logout-icon{margin-left:auto;color:var(--muted-2);font-size:14px}
+
+  /* ===== MAIN ===== */
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+  .topbar{height:60px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:#fff;flex-shrink:0}
+  .topbar .crumb{font-size:13px;color:var(--muted);font-weight:500}
+  .topbar .crumb strong{color:var(--ink);font-weight:700}
+  .topbar .right{display:flex;align-items:center;gap:10px}
+  .icon-btn{width:36px;height:36px;border-radius:10px;background:#fafafa;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:15px}
+  .upgrade-btn{background:var(--yellow);color:var(--ink);border:1px solid var(--yellow-deep);padding:8px 14px;border-radius:10px;font-weight:700;font-size:12px}
+
+  .content{flex:1;overflow-y:auto;padding:28px 36px}
+  .screen{display:none;animation:fadeUp .35s cubic-bezier(.2,.8,.2,1)}
+  .screen.active{display:block}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+  .page-head h1{font-size:30px;font-weight:800;letter-spacing:-0.02em}
+  .ai-pill{background:#fff;border:1px solid var(--line);padding:9px 14px;border-radius:10px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+
+  .live-banner{background:linear-gradient(135deg,#0a0a0a,#1a1a1a);color:#fff;border-radius:14px;padding:18px 22px;display:flex;align-items:center;gap:14px;margin-bottom:22px}
+  .live-dot{width:10px;height:10px;border-radius:50%;background:#10b981;box-shadow:0 0 0 5px rgba(16,185,129,.25);animation:pulse 1.5s infinite;flex-shrink:0}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .live-banner .txt{flex:1}
+  .live-banner .t{font-weight:700;font-size:13px}
+  .live-banner .s{font-size:11px;color:#aaa;margin-top:2px}
+  .live-banner .count{background:var(--yellow);color:var(--ink);padding:7px 12px;border-radius:8px;font-weight:800;font-size:12px}
+
+  /* ===== HOME ===== */
+  .home-hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:40px 0;position:relative}
+  .home-hero::before{content:"";position:absolute;top:5%;left:50%;width:540px;height:540px;transform:translateX(-50%);background:radial-gradient(circle,rgba(255,235,59,.30),rgba(255,235,59,0) 65%);pointer-events:none;z-index:0}
+  .home-hero > *{position:relative;z-index:1}
+  .home-logo{width:84px;height:84px;margin-bottom:24px;animation:logoIn .6s cubic-bezier(.2,.8,.2,1)}
+  .home-h1{font-size:42px;font-weight:800;letter-spacing:-0.025em}
+  .home-sub{font-size:15px;color:var(--muted);margin-top:8px}
+  .home-input-wrap{width:640px;max-width:90%;margin-top:32px}
+  .home-input{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:28px;padding:8px 8px 8px 22px;box-shadow:0 8px 24px rgba(0,0,0,.06)}
+  .home-input .plus{width:32px;height:32px;border-radius:50%;background:#fafafa;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--muted)}
+  .home-input input{flex:1;font-size:14px;padding:10px 0}
+  .home-input input::placeholder{color:var(--muted-2)}
+  .home-input .mic{width:36px;height:36px;border-radius:50%;background:#0a0a0a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px}
+  .quick-prompts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+  .quick-prompt{background:#fff;border:1px solid var(--line);padding:10px 18px;border-radius:999px;font-size:12px;font-weight:500;color:var(--ink-2);transition:all .18s}
+  .quick-prompt:hover{background:var(--yellow-soft);border-color:var(--yellow-deep);transform:translateY(-1px)}
+
+  .home-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:46px}
+  .stat-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}
+  .stat-card .lbl{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em}
+  .stat-card .val{font-size:24px;font-weight:800;margin-top:6px;letter-spacing:-0.02em}
+  .stat-card .delta{font-size:11px;font-weight:700;margin-top:2px}
+  .delta.up{color:var(--green)}
+  .delta.down{color:var(--red)}
+
+  /* ===== CHAT ===== */
+  #chat{display:none;height:calc(100vh - 60px - 56px);flex-direction:column}
+  #chat.active{display:flex}
+  .chat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .chat-top h1{font-size:26px;font-weight:800;letter-spacing:-0.02em}
+  .chat-status{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .chat-status::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(16,185,129,.2)}
+  .model-picker{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .model-picker select{font-size:12px;font-weight:700;cursor:pointer}
+  .chat-msgs{flex:1;overflow-y:auto;padding:8px 0 18px;display:flex;flex-direction:column;gap:18px;max-width:780px;width:100%;margin:0 auto}
+  .msg{display:flex;gap:12px;max-width:80%;animation:fadeUp .3s}
+  .msg.user{align-self:flex-end;flex-direction:row-reverse}
+  .avatar{width:32px;height:32px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .avatar.bot{background:var(--yellow)}
+  .avatar.user{background:#0a0a0a;color:#fff;font-size:13px;font-weight:700}
+  .bubble{padding:13px 18px;border-radius:16px;background:#f5f5f5;font-size:14px;line-height:1.55}
+  .msg.user .bubble{background:var(--yellow);font-weight:500}
+  .bubble strong{font-weight:700}
+  .tool-chip{display:inline-flex;align-items:center;gap:5px;background:#dcfce7;color:#166534;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;margin-bottom:6px}
+  .typing .bubble{display:flex;gap:5px;align-items:center;padding:16px 18px}
+  .typing .dot{width:7px;height:7px;border-radius:50%;background:var(--muted-2);animation:typing 1.2s infinite ease-in-out}
+  .typing .dot:nth-child(2){animation-delay:.15s}
+  .typing .dot:nth-child(3){animation-delay:.3s}
+  @keyframes typing{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+  .composer{max-width:780px;width:100%;margin:0 auto;padding-top:14px;border-top:1px solid var(--line)}
+  .composer-inner{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:6px 6px 6px 18px;box-shadow:0 6px 18px rgba(0,0,0,.04)}
+  .composer-inner input{flex:1;font-size:14px;padding:11px 0}
+  .send-btn{width:38px;height:38px;border-radius:11px;background:var(--yellow);border:1px solid var(--yellow-deep);display:flex;align-items:center;justify-content:center}
+
+  /* ===== TASKS ===== */
+  .task-progress{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 22px;margin-bottom:16px}
+  .task-progress .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .task-progress .lbl{font-size:13px;font-weight:700}
+  .task-progress .pct{font-size:13px;font-weight:800;color:var(--yellow-deep)}
+  .task-progress-bar{height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden}
+  .task-progress-fill{height:100%;background:linear-gradient(90deg,var(--yellow),var(--yellow-deep));border-radius:4px;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+  .add-bar{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 18px;display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .add-bar input{flex:1;font-size:14px}
+  .add-bar button{width:34px;height:34px;border-radius:9px;background:var(--yellow);border:1px solid var(--yellow-deep);font-size:18px;font-weight:700}
+  .task{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-bottom:8px}
+  .check{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--muted-2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;transition:all .2s}
+  .task.done .check{background:var(--green);border-color:var(--green);color:#fff;animation:checkPop .35s cubic-bezier(.2,.8,.2,1)}
+  @keyframes checkPop{0%{transform:scale(.7)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+  .task.urgent .check{border-color:var(--yellow-deep);background:var(--yellow-soft)}
+  .task.urgent .check::after{content:"!";color:var(--yellow-deep);font-weight:800;font-size:11px}
+  .task .label{flex:1;font-size:14px;font-weight:500}
+  .task.done .label{text-decoration:line-through;color:var(--muted-2)}
+  .auto-tag{font-size:9px;font-weight:700;letter-spacing:0.04em;background:#dcfce7;color:#166534;padding:2px 6px;border-radius:4px;margin-left:6px}
+  .badge{padding:4px 11px;border-radius:999px;font-size:10px;font-weight:700}
+  .b-urgent{background:#fee2e2;color:#991b1b}
+  .b-high{background:#ffedd5;color:#9a3412}
+  .b-med{background:var(--yellow-soft);color:#856404}
+
+  /* ===== BUDGET ===== */
+  .budget-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-bottom:18px}
+  .balance-hero{background:linear-gradient(135deg,#0a0a0a,#1a1a1a);color:#fff;border-radius:18px;padding:26px 30px;position:relative;overflow:hidden}
+  .balance-hero::after{content:"";position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(255,235,59,.18),transparent 70%)}
+  .balance-hero .lbl{font-size:11px;color:#aaa;font-weight:600;text-transform:uppercase;letter-spacing:0.06em}
+  .balance-hero .val{font-size:42px;font-weight:800;letter-spacing:-0.02em;margin-top:6px}
+  .balance-hero .delta{font-size:12px;color:#10b981;font-weight:700;margin-top:6px}
+  .balance-hero .row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;position:relative}
+  .balance-hero .row > div{padding-top:10px;border-top:1px solid rgba(255,255,255,.1)}
+  .balance-hero .row .l{font-size:10px;color:#aaa;text-transform:uppercase;font-weight:600}
+  .balance-hero .row .v{font-size:18px;font-weight:800;margin-top:3px}
+  .donut-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;text-align:center}
+  .donut-card h3{font-size:13px;font-weight:700;text-align:left;margin-bottom:14px}
+  .donut-wrap{position:relative;display:inline-block}
+  .donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+  .donut-center .dc-val{font-size:22px;font-weight:800;letter-spacing:-0.02em}
+  .donut-center .dc-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:12px;font-size:10px;color:var(--muted)}
+  .legend span{display:flex;align-items:center;gap:5px}
+  .legend span::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c)}
+  .expense{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-bottom:7px}
+  .exp-icon{width:36px;height:36px;border-radius:9px;background:#fee2e2;display:flex;align-items:center;justify-content:center;font-size:15px}
+  .exp-icon.pos{background:#dcfce7}
+  .exp-info{flex:1}
+  .exp-info .t{font-size:13px;font-weight:600}
+  .exp-info .d{font-size:11px;color:var(--muted-2);margin-top:1px}
+  .exp-amt{font-size:14px;font-weight:700;color:var(--red)}
+  .exp-amt.pos{color:var(--green)}
+
+  /* ===== ADS ===== */
+  .ads-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .ads-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}
+  .ads-card .lbl{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase}
+  .ads-card .val{font-size:26px;font-weight:800;margin-top:5px;letter-spacing:-0.02em}
+  .ads-card .delta{font-size:11px;font-weight:700;margin-top:2px}
+  .ads-card .spark{margin-top:8px;display:block}
+  .perf-chart{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:18px}
+  .perf-chart h3{font-size:14px;font-weight:700;margin-bottom:14px}
+  .bars{display:flex;align-items:flex-end;gap:14px;height:140px;padding:0 6px}
+  .bar{flex:1;background:linear-gradient(180deg,var(--yellow),var(--yellow-deep));border-radius:6px 6px 0 0;transform-origin:bottom;animation:barRise .7s cubic-bezier(.2,.8,.2,1) both}
+  .bars .bar:nth-child(1){animation-delay:.05s}.bars .bar:nth-child(2){animation-delay:.1s}.bars .bar:nth-child(3){animation-delay:.15s}.bars .bar:nth-child(4){animation-delay:.2s}.bars .bar:nth-child(5){animation-delay:.25s}.bars .bar:nth-child(6){animation-delay:.3s}.bars .bar:nth-child(7){animation-delay:.35s}
+  @keyframes barRise{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+  .bar-labels{display:flex;gap:14px;padding:8px 6px 0;font-size:10px;color:var(--muted-2);font-weight:600}
+  .bar-labels span{flex:1;text-align:center}
+  .campaigns-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .campaign{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}
+  .camp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px}
+  .camp-name-row{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+  .camp-platform{width:28px;height:28px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+  .pf-meta{background:#1877f2;color:#fff}
+  .pf-google{background:#fff;border:1px solid var(--line);color:#4285f4}
+  .pf-tiktok{background:#000;color:#fff}
+  .pf-x{background:#000;color:#fff}
+  .pf-linkedin{background:#0a66c2;color:#fff;font-size:11px}
+  .pf-snap{background:#fffc00;color:#000}
+  .pf-amazon{background:#ff9900;color:#000}
+  .pf-bing{background:#008373;color:#fff}
+  .camp-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .camp-status{font-size:9px;font-weight:700;padding:3px 9px;border-radius:5px;letter-spacing:0.04em;flex-shrink:0}
+  .cs-active{background:#dcfce7;color:#166534}
+  .cs-paused{background:#fef3c7;color:#92400e}
+  .camp-meta{display:flex;gap:18px;font-size:11px;color:var(--muted)}
+  .camp-meta strong{color:var(--ink);font-weight:700}
+  .camp-bar{margin-top:10px;height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden}
+  .camp-bar-fill{height:100%;background:linear-gradient(90deg,var(--yellow),var(--yellow-deep));border-radius:3px}
+
+  /* ===== INTEGRATIONS ===== */
+  .int-top{display:flex;gap:12px;margin-bottom:18px}
+  .int-search{flex:1;background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 18px;font-size:13px}
+  .connect-all-btn{background:var(--ink);color:var(--yellow);padding:13px 22px;border-radius:12px;font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px}
+  .connect-all-btn.disconnect-mode{background:#dc2626;color:#fff}
+  .int-tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+  .int-tab{padding:8px 16px;border-radius:999px;font-size:12px;font-weight:600;background:#fff;color:var(--muted);border:1px solid var(--line)}
+  .int-tab.active{background:var(--yellow);color:var(--ink);border-color:var(--yellow-deep)}
+  .int-section{margin-bottom:26px}
+  .int-section h2{font-size:13px;font-weight:700;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);display:flex;align-items:center;gap:10px}
+  .count-pill{background:#f5f5f5;color:var(--muted);padding:3px 10px;border-radius:999px;font-size:10px;font-weight:700;text-transform:none;letter-spacing:0}
+  .int-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .int-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column}
+  .int-card .name{font-size:13px;font-weight:700}
+  .int-card .desc{font-size:11px;color:var(--muted);margin:2px 0 12px;line-height:1.3;flex:1}
+  .int-toggle-btn{padding:8px;border-radius:8px;font-size:10px;font-weight:700;letter-spacing:0.04em;border:1px solid transparent;cursor:pointer;transition:all .15s}
+  .itb-disconnected{background:var(--yellow);color:var(--ink);border-color:var(--yellow-deep)}
+  .itb-connected{background:#dcfce7;color:#166534;border-color:#86efac}
+  .itb-live{background:#dbeafe;color:#1e40af;border-color:#93c5fd}
+
+  /* ===== PRICING ===== */
+  .pricing-head{text-align:center;margin-bottom:24px}
+  .pricing-head h1{font-size:36px;font-weight:800;letter-spacing:-0.02em}
+  .pricing-head p{font-size:14px;color:var(--muted);margin-top:8px}
+  .billing-toggle{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:30px}
+  .toggle{width:48px;height:26px;background:var(--yellow);border-radius:999px;position:relative;cursor:pointer;border:1px solid var(--yellow-deep)}
+  .toggle::after{content:"";width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .toggle.annual::after{transform:translateX(22px)}
+  .toggle-lbl{font-size:14px;font-weight:600}
+  .save-pill{background:var(--yellow);color:var(--ink);padding:4px 11px;border-radius:999px;font-size:11px;font-weight:700}
+  .plans-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;max-width:920px;margin:0 auto}
+  .plan{background:#fff;border:1px solid var(--line);border-radius:22px;padding:32px 30px;position:relative}
+  .plan.featured{border:2px solid var(--yellow-deep);box-shadow:0 12px 40px rgba(244,208,0,.2)}
+  .plan.max{border:2px solid #0a0a0a;background:linear-gradient(180deg,#fff,#fafafa);box-shadow:0 12px 40px rgba(0,0,0,.18)}
+  .plan .save-tag{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#FFEB3B,#F4D000);color:var(--ink);padding:6px 18px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap;box-shadow:0 6px 18px rgba(244,208,0,.5)}
+  .plan.max .save-tag{background:linear-gradient(135deg,#0a0a0a,#2a2a2a);color:var(--yellow)}
+  .plan .name{font-size:18px;font-weight:700;display:flex;align-items:center;gap:10px}
+  .max-badge{background:#0a0a0a;color:var(--yellow);padding:3px 9px;border-radius:6px;font-size:10px;font-weight:800;letter-spacing:0.04em}
+  .plan .price{font-size:48px;font-weight:800;letter-spacing:-0.02em;margin-top:8px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .plan .price .strike{font-size:24px;color:var(--muted-2);text-decoration:line-through;text-decoration-thickness:2px;font-weight:600}
+  .plan .price .per{font-size:14px;color:var(--muted);font-weight:500}
+  .plan .billing-note{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
+  .trial-callout{margin-top:14px;padding:11px 16px;background:linear-gradient(135deg,#fff7b8,#ffe66b);border:1px dashed var(--yellow-deep);border-radius:10px;font-size:12px;color:#5a4a00;text-align:center;font-weight:700}
+  .plan ul{list-style:none;margin-top:20px;display:flex;flex-direction:column;gap:11px}
+  .plan li{font-size:13px;display:flex;align-items:flex-start;gap:10px;line-height:1.4}
+  .plan li::before{content:"✓";color:var(--green);font-weight:800;width:16px;flex-shrink:0}
+  .plan.max li::before{color:var(--yellow-deep)}
+  .plan .cta{display:block;width:100%;margin-top:24px;padding:14px;border-radius:12px;font-weight:700;font-size:14px;text-align:center}
+  .cta-upgrade{background:linear-gradient(135deg,#FFEB3B,#F4D000);color:var(--ink);box-shadow:0 8px 22px rgba(244,208,0,.45)}
+  .cta-max{background:#0a0a0a;color:var(--yellow);box-shadow:0 8px 22px rgba(0,0,0,.35)}
+  .pay-link{margin-top:10px;font-size:11px;color:var(--muted-2);text-align:center}
+  .pay-link a{color:var(--yellow-deep);font-weight:700}
+
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#ddd;border-radius:4px}
+  ::-webkit-scrollbar-thumb:hover{background:#bbb}
+</style>
+</head>
+<body>
+
+<svg style="display:none">
+  <symbol id="ezlogo" viewBox="0 0 1024 1024">
+    <rect width="1024" height="1024" rx="200" fill="#FFEB3B"/>
+    <rect x="280" y="144" width="64" height="96" rx="32" fill="#0a0a0a"/>
+    <rect x="680" y="144" width="64" height="96" rx="32" fill="#0a0a0a"/>
+    <rect x="192" y="224" width="640" height="576" rx="120" fill="#FFFFFF"/>
+    <rect x="320" y="384" width="96" height="96" rx="24" fill="#000000"/>
+    <rect x="608" y="384" width="96" height="96" rx="24" fill="#000000"/>
+    <rect x="352" y="608" width="320" height="48" rx="24" fill="#000000"/>
+    <circle cx="380" cy="440" r="12" fill="#FFF200"/>
+    <circle cx="668" cy="440" r="12" fill="#FFF200"/>
+  </symbol>
+</svg>
+
+<!-- ===== LOGIN OVERLAY ===== -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-card">
+    <svg class="lc-logo"><use href="#ezlogo"/></svg>
+    <h1>Welcome to EZ Pilot</h1>
+    <div class="sub">Your autonomous AI agent</div>
+    <div class="domain-pill">🔒 https://ez-pilot.com</div>
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="switchLoginTab(this,'email')">Email</button>
+      <button class="login-tab" onclick="switchLoginTab(this,'phone')">Phone</button>
+    </div>
+    <input type="email" class="login-input" id="login-id" placeholder="you@example.com">
+    <input type="password" class="login-input" placeholder="Password">
+    <label class="terms-check">
+      <input type="checkbox" id="terms-accept" onchange="updateLoginButton()">
+      <span>I agree to the <a href="/terms.html" target="_blank">Terms of Service</a> and <a href="/privacy.html" target="_blank">Privacy Policy</a></span>
+    </label>
+    <button class="login-cta" id="login-cta" onclick="doLogin()" disabled>Sign In →</button>
+    <div class="ldivider">OR CONTINUE WITH</div>
+    <div class="social-grid">
+      <button class="social-btn" onclick="doLogin()">G&nbsp; Google</button>
+      <button class="social-btn" onclick="doLogin()">f&nbsp; Facebook</button>
+      <button class="social-btn" onclick="doLogin()">⊞&nbsp; Microsoft</button>
+    </div>
+    <div class="login-foot">You must agree to the Terms & Privacy Policy to sign in.<br>New here? <strong>1-month Pro trial included</strong>.</div>
+  </div>
+</div>
+
+<div class="app">
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="logo">
+      <svg><use href="#ezlogo"/></svg>
+      <div class="logo-text"><div class="name">EZ Pilot</div><div class="domain">ez-pilot.com</div></div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" data-screen="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Home</div>
+      <div class="nav-item" data-screen="chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chat</div>
+      <div class="nav-item" data-screen="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Tasks</div>
+      <div class="nav-item" data-screen="ads"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-5v12L3 14v-3z"/></svg>Ads</div>
+      <div class="nav-item" data-screen="budget"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Budget</div>
+      <div class="nav-item" data-screen="integrations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Integrations</div>
+      <div class="nav-item" data-screen="pricing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Pricing</div>
+    </nav>
+    <div class="plan-card">
+      <div class="title">⚡ Free Trial</div>
+      <div class="sub">28 days left of Pro features</div>
+      <button onclick="goTo('pricing')">Upgrade to Max</button>
+    </div>
+    <div class="user-row" onclick="logout()">
+      <div class="user-avatar">A</div>
+      <div class="user-info"><div class="un">Alex Chen</div><div class="ue">alex@ez-pilot.com</div></div>
+      <div class="logout-icon">⏻</div>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main">
+    <header class="topbar">
+      <div class="crumb">🔒 <strong>ez-pilot.com</strong> · autonomous AI agent</div>
+      <div class="right">
+        <button class="icon-btn">🔔</button>
+        <button class="icon-btn">⚙️</button>
+        <button class="upgrade-btn" onclick="goTo('pricing')">⚡ Upgrade</button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- HOME -->
+      <section class="screen active" id="home">
+        <div class="home-hero">
+          <svg class="home-logo"><use href="#ezlogo"/></svg>
+          <div class="home-h1">What are you working on?</div>
+          <div class="home-sub">Your autonomous AI pilot is ready to act</div>
+          <div class="home-input-wrap">
+            <div class="home-input" onclick="goTo('chat')">
+              <div class="plus">+</div>
+              <input type="text" placeholder="Ask anything or command me to do anything…" readonly>
+              <div class="mic">🎤</div>
+            </div>
+            <div class="quick-prompts">
+              <button class="quick-prompt" onclick="goTo('chat')">📝 Write essay in Google Docs</button>
+              <button class="quick-prompt" onclick="goTo('chat')">✈️ Book a flight to NYC</button>
+              <button class="quick-prompt" onclick="goTo('chat')">💻 Review my GitHub PR</button>
+              <button class="quick-prompt" onclick="goTo('ads')">📢 Launch TikTok ads</button>
+              <button class="quick-prompt" onclick="goTo('budget')">💰 Analyze my budget</button>
+            </div>
+          </div>
+        </div>
+        <div class="home-stats">
+          <div class="stat-card"><div class="lbl">Tasks Today</div><div class="val">12</div><div class="delta up">↑ 4 auto-detected</div></div>
+          <div class="stat-card"><div class="lbl">Budget</div><div class="val">$2,211</div><div class="delta up">↑ $412 mo</div></div>
+          <div class="stat-card"><div class="lbl">Ad Spend (7d)</div><div class="val">$1,247</div><div class="delta down">↓ 8%</div></div>
+          <div class="stat-card"><div class="lbl">ROAS</div><div class="val">4.2×</div><div class="delta up">↑ 0.4×</div></div>
+        </div>
+      </section>
+
+      <!-- CHAT -->
+      <section class="screen" id="chat">
+        <div class="chat-top">
+          <h1>Chat</h1>
+          <div style="display:flex;align-items:center;gap:14px">
+            <span class="chat-status">online · agent ready</span>
+            <div class="model-picker">🧠 <select id="model-select">
+              <option>Claude Opus 4.6</option>
+              <option>Claude Sonnet 4.6</option>
+              <option>GPT-5</option>
+              <option>OpenAI o1</option>
+              <option>Gemini 2.5 Pro</option>
+              <option>Grok 4</option>
+              <option>DeepSeek R2</option>
+              <option>Mistral Large</option>
+              <option>Perplexity</option>
+            </select></div>
+          </div>
+        </div>
+        <div class="chat-msgs" id="msgs">
+          <div class="msg user"><div class="avatar user">U</div><div class="bubble">what's the capital of australia?</div></div>
+          <div class="msg"><div class="avatar bot"><svg viewBox="0 0 1024 1024" style="width:24px;height:24px"><use href="#ezlogo"/></svg></div><div class="bubble">Canberra. It was chosen as a compromise between Sydney and Melbourne in 1908. Anything else you'd like to know?</div></div>
+          <div class="msg user"><div class="avatar user">U</div><div class="bubble">suggest what i should do to save $85 more next month</div></div>
+          <div class="msg"><div class="avatar bot"><svg viewBox="0 0 1024 1024" style="width:24px;height:24px"><use href="#ezlogo"/></svg></div><div class="bubble"><span class="tool-chip">✓ pulled_budget</span><span class="make-chip">⚙️ make.com workflow</span><br>Looking at your last 30 days: <strong>$85.50 on groceries</strong>, <strong>$62.30 on dining out</strong>, and <strong>$45 on Uber</strong>. Three quick wins to save $85+ next month:<br>• <strong>Cut dining out in half</strong> → save ~$31<br>• <strong>Walk/transit 2× per week instead of Uber</strong> → save ~$25<br>• <strong>Meal-plan Sundays to cut grocery waste</strong> → save ~$30<br><br>Want me to set a weekly Sunday reminder and a $200 dining-out cap?</div></div>
+          <div class="msg user"><div class="avatar user">U</div><div class="bubble">yes set the reminder</div></div>
+          <div class="msg"><div class="avatar bot"><svg viewBox="0 0 1024 1024" style="width:24px;height:24px"><use href="#ezlogo"/></svg></div><div class="bubble"><span class="tool-chip">✓ calendar.create</span><span class="make-chip">⚙️ make.com workflow</span><br>Done. Recurring Sunday 6 PM "Meal plan for the week" added to your Google Calendar, and a $200 dining-out budget cap is now live — I'll alert you at 80%.</div></div>
+          <div class="msg user"><div class="avatar user">U</div><div class="bubble">write an essay about the american revolution in a brand new google docs</div></div>
+          <div class="msg"><div class="avatar bot"><svg viewBox="0 0 1024 1024" style="width:24px;height:24px"><use href="#ezlogo"/></svg></div><div class="bubble"><span class="tool-chip">✓ google_docs.create</span><br>Created <strong>"American Revolution Essay"</strong> in your Google Docs and wrote a 1,200-word piece covering the causes, key battles, founding figures, and aftermath. <a href="#" style="color:#1e40af;text-decoration:underline">Open doc →</a></div></div>
+          <div class="msg user"><div class="avatar user">U</div><div class="bubble">launch a TikTok ads campaign, $50/day, target Gen Z in the US</div></div>
+          <div class="msg"><div class="avatar bot"><svg viewBox="0 0 1024 1024" style="width:24px;height:24px"><use href="#ezlogo"/></svg></div><div class="bubble"><span class="tool-chip">✓ tiktok_ads.create</span><br>Setting up <strong>TikTok Ads campaign</strong>. Budget: $50/day. Audience: Gen Z, US. Generating 3 video creatives now. Will go live in ~5 minutes — track on the Ads page.</div></div>
+        </div>
+        <div class="composer">
+          <div class="context-row">
+            <button class="context-pill" data-context="budget">💰 Pull budget</button>
+            <button class="context-pill" data-context="tasks">📋 Pull tasks</button>
+            <button class="context-pill" data-context="ads">📢 Pull ads</button>
+            <span class="upload-counter" id="upload-counter" style="margin-left:auto">📎 0/15 files today</span>
+          </div>
+          <div class="composer-inner">
+            <button class="attach-btn" onclick="document.getElementById('file-input').click()" title="Attach file (any type)">📎</button>
+            <input type="file" id="file-input" style="display:none" onchange="handleFileUpload(event)">
+            <input type="text" placeholder="Ask anything or command me — I can pull from your budget, tasks & ads…" id="chat-input">
+            <button class="send-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TASKS -->
+      <section class="screen" id="tasks">
+        <div class="page-head"><h1>Tasks</h1><button class="ai-pill">📋 AI Work Log</button></div>
+        <div class="live-banner">
+          <div class="live-dot"></div>
+          <div class="txt"><div class="t">Auto-detect & execute active</div><div class="s">Real AI watching connected services and acting on validated items</div></div>
+          <div class="count">12 today</div>
+        </div>
+        <div class="task-progress">
+          <div class="row"><span class="lbl">Today's progress</span><span class="pct" id="task-pct">17%</span></div>
+          <div class="task-progress-bar"><div class="task-progress-fill" id="task-fill" style="width:17%"></div></div>
+        </div>
+        <div class="add-bar"><input type="text" placeholder="Add a task or describe an action..."><button>+</button></div>
+        <div class="task urgent"><div class="check"></div><div class="label">Walmart Q4 report <span class="auto-tag">AUTO</span></div><span class="badge b-urgent">Urgent</span></div>
+        <div class="task urgent"><div class="check"></div><div class="label">Reply to Sarah's email about budget <span class="auto-tag">GMAIL</span></div><span class="badge b-high">High</span></div>
+        <div class="task urgent"><div class="check"></div><div class="label">Book NYC flights for next week <span class="auto-tag">CALENDAR</span></div><span class="badge b-urgent">Urgent</span></div>
+        <div class="task"><div class="check"></div><div class="label">Update Q3 docs in Google Drive <span class="auto-tag">SLACK</span></div><span class="badge b-med">Med</span></div>
+        <div class="task done"><div class="check">✓</div><div class="label">Respond to client DMs on Instagram</div><span class="badge b-high">High</span></div>
+        <div class="task"><div class="check"></div><div class="label">Review PR #847 <span class="auto-tag">GITHUB</span></div><span class="badge b-med">Med</span></div>
+      </section>
+
+      <!-- BUDGET -->
+      <section class="screen" id="budget">
+        <div class="page-head"><h1>Budget</h1><button class="ai-pill">✨ DeepSeek R2 advanced</button></div>
+        <div class="budget-grid">
+          <div class="balance-hero">
+            <div class="lbl">Available Balance</div>
+            <div class="val">$2,211.23</div>
+            <div class="delta">↑ $412 this month</div>
+            <div class="row">
+              <div><div class="l">Income</div><div class="v" style="color:#10b981">$2,500</div></div>
+              <div><div class="l">Spent</div><div class="v" style="color:#ef4444">$288</div></div>
+            </div>
+          </div>
+          <div class="donut-card">
+            <h3>Spending by Category</h3>
+            <div class="donut-wrap">
+            <svg width="180" height="180" viewBox="0 0 42 42">
+              <circle cx="21" cy="21" r="15.9" fill="none" stroke="#f5f5f5" stroke-width="6"/>
+              <circle cx="21" cy="21" r="15.9" fill="none" stroke="#ef4444" stroke-width="6" stroke-dasharray="42 100" stroke-dashoffset="25" transform="rotate(-90 21 21)"/>
+              <circle cx="21" cy="21" r="15.9" fill="none" stroke="#f59e0b" stroke-width="6" stroke-dasharray="20 100" stroke-dashoffset="-17" transform="rotate(-90 21 21)"/>
+              <circle cx="21" cy="21" r="15.9" fill="none" stroke="#10b981" stroke-width="6" stroke-dasharray="17 100" stroke-dashoffset="-37" transform="rotate(-90 21 21)"/>
+              <circle cx="21" cy="21" r="15.9" fill="none" stroke="#3b82f6" stroke-width="6" stroke-dasharray="11 100" stroke-dashoffset="-54" transform="rotate(-90 21 21)"/>
+              <circle cx="21" cy="21" r="15.9" fill="none" stroke="#8b5cf6" stroke-width="6" stroke-dasharray="10 100" stroke-dashoffset="-65" transform="rotate(-90 21 21)"/>
+            </svg>
+            <div class="donut-center"><div class="dc-val">$288</div><div class="dc-lbl">Spent</div></div>
+            </div>
+            <div class="legend">
+              <span style="--c:#ef4444">food</span><span style="--c:#f59e0b">transport</span><span style="--c:#10b981">health</span><span style="--c:#3b82f6">education</span><span style="--c:#8b5cf6">subs</span>
+            </div>
+          </div>
+        </div>
+        <div class="expense"><div class="exp-icon">📉</div><div class="exp-info"><div class="t">Grocery shopping</div><div class="d">2026-04-07 · Whole Foods</div></div><span class="exp-amt">-$85.50</span></div>
+        <div class="expense"><div class="exp-icon">📉</div><div class="exp-info"><div class="t">Uber to airport</div><div class="d">2026-04-06 · Transport</div></div><span class="exp-amt">-$45.00</span></div>
+        <div class="expense"><div class="exp-icon">📉</div><div class="exp-info"><div class="t">Netflix subscription</div><div class="d">2026-04-05 · Entertainment</div></div><span class="exp-amt">-$15.99</span></div>
+        <div class="expense"><div class="exp-icon pos">📈</div><div class="exp-info"><div class="t">Freelance payment</div><div class="d">2026-04-04 · Income</div></div><span class="exp-amt pos">+$2,500.00</span></div>
+      </section>
+
+      <!-- ADS -->
+      <section class="screen" id="ads">
+        <div class="page-head"><h1>Ads</h1><button class="ai-pill">✨ Real-time Auto-Optimize</button></div>
+        <div class="live-banner">
+          <div class="live-dot"></div>
+          <div class="txt"><div class="t">5 campaigns running on autopilot</div><div class="s">AI optimizing bids, budgets & creatives across 8 ad networks in real time</div></div>
+          <div class="count">LIVE</div>
+        </div>
+        <div class="ads-summary">
+          <div class="ads-card"><div class="lbl">Spend (7d)</div><div class="val">$1,247</div><div class="delta down">↓ 8% vs last week</div>
+            <svg class="spark" width="100%" height="28" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="#ef4444" stroke-width="2" points="0,10 15,15 30,7 45,18 60,12 75,20 90,16 100,22"/></svg>
+          </div>
+          <div class="ads-card"><div class="lbl">Conversions</div><div class="val">328</div><div class="delta up">↑ 23%</div>
+            <svg class="spark" width="100%" height="28" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="#10b981" stroke-width="2" points="0,22 15,18 30,20 45,12 60,14 75,7 90,5 100,2"/></svg>
+          </div>
+          <div class="ads-card"><div class="lbl">CTR</div><div class="val">4.8%</div><div class="delta up">↑ 0.6 pts</div>
+            <svg class="spark" width="100%" height="28" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="#10b981" stroke-width="2" points="0,18 15,16 30,17 45,11 60,12 75,8 90,6 100,4"/></svg>
+          </div>
+          <div class="ads-card"><div class="lbl">ROAS</div><div class="val">4.2×</div><div class="delta up">↑ 0.4×</div>
+            <svg class="spark" width="100%" height="28" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="#10b981" stroke-width="2" points="0,20 15,17 30,15 45,13 60,9 75,11 90,5 100,3"/></svg>
+          </div>
+        </div>
+        <div class="perf-chart">
+          <h3>Conversions — Last 7 Days</h3>
+          <div class="bars"><div class="bar" style="height:42%"></div><div class="bar" style="height:58%"></div><div class="bar" style="height:51%"></div><div class="bar" style="height:73%"></div><div class="bar" style="height:65%"></div><div class="bar" style="height:88%"></div><div class="bar" style="height:95%"></div></div>
+          <div class="bar-labels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+        </div>
+        <div class="campaigns-grid">
+          <div class="campaign"><div class="camp-head"><div class="camp-name-row"><div class="camp-platform pf-google">G</div><div class="camp-name">Google Ads — Productivity</div></div><span class="camp-status cs-active">ACTIVE</span></div><div class="camp-meta"><span>Spend: <strong>$512</strong></span><span>Conv: <strong>118</strong></span><span>ROAS: <strong>3.8×</strong></span></div><div class="camp-bar"><div class="camp-bar-fill" style="width:62%"></div></div></div>
+          <div class="campaign"><div class="camp-head"><div class="camp-name-row"><div class="camp-platform pf-meta">f</div><div class="camp-name">Meta Ads — SaaS Founders</div></div><span class="camp-status cs-active">ACTIVE</span></div><div class="camp-meta"><span>Spend: <strong>$487</strong></span><span>Conv: <strong>142</strong></span><span>ROAS: <strong>5.1×</strong></span></div><div class="camp-bar"><div class="camp-bar-fill" style="width:78%"></div></div></div>
+          <div class="campaign"><div class="camp-head"><div class="camp-name-row"><div class="camp-platform pf-tiktok">♪</div><div class="camp-name">TikTok Ads — Gen Z US</div></div><span class="camp-status cs-active">ACTIVE</span></div><div class="camp-meta"><span>Spend: <strong>$248</strong></span><span>Conv: <strong>68</strong></span><span>ROAS: <strong>3.4×</strong></span></div><div class="camp-bar"><div class="camp-bar-fill" style="width:45%"></div></div></div>
+          <div class="campaign"><div class="camp-head"><div class="camp-name-row"><div class="camp-platform pf-linkedin">in</div><div class="camp-name">LinkedIn Ads — B2B</div></div><span class="camp-status cs-active">ACTIVE</span></div><div class="camp-meta"><span>Spend: <strong>$320</strong></span><span>Conv: <strong>42</strong></span><span>ROAS: <strong>4.7×</strong></span></div><div class="camp-bar"><div class="camp-bar-fill" style="width:55%"></div></div></div>
+          <div class="campaign"><div class="camp-head"><div class="camp-name-row"><div class="camp-platform pf-amazon">a</div><div class="camp-name">Amazon Sponsored Products</div></div><span class="camp-status cs-active">ACTIVE</span></div><div class="camp-meta"><span>Spend: <strong>$180</strong></span><span>Conv: <strong>91</strong></span><span>ROAS: <strong>6.2×</strong></span></div><div class="camp-bar"><div class="camp-bar-fill" style="width:38%"></div></div></div>
+          <div class="campaign"><div class="camp-head"><div class="camp-name-row"><div class="camp-platform pf-snap">👻</div><div class="camp-name">Snapchat Ads</div></div><span class="camp-status cs-paused">PAUSED</span></div><div class="camp-meta"><span>Spend: <strong>$0</strong></span><span>Conv: <strong>0</strong></span><span>ROAS: <strong>—</strong></span></div><div class="camp-bar"><div class="camp-bar-fill" style="width:0%"></div></div></div>
+          <div class="campaign"><div class="camp-head"><div class="camp-name-row"><div class="camp-platform pf-x">𝕏</div><div class="camp-name">X Ads — Retargeting</div></div><span class="camp-status cs-paused">PAUSED</span></div><div class="camp-meta"><span>Spend: <strong>$0</strong></span><span>Conv: <strong>0</strong></span><span>ROAS: <strong>—</strong></span></div><div class="camp-bar"><div class="camp-bar-fill" style="width:0%"></div></div></div>
+          <div class="campaign"><div class="camp-head"><div class="camp-name-row"><div class="camp-platform pf-bing">b</div><div class="camp-name">Microsoft Ads (Bing)</div></div><span class="camp-status cs-paused">PAUSED</span></div><div class="camp-meta"><span>Spend: <strong>$0</strong></span><span>Conv: <strong>0</strong></span><span>ROAS: <strong>—</strong></span></div><div class="camp-bar"><div class="camp-bar-fill" style="width:0%"></div></div></div>
+        </div>
+      </section>
+
+      <!-- INTEGRATIONS -->
+      <section class="screen" id="integrations">
+        <div class="page-head"><h1>Integrations</h1></div>
+        <div class="live-banner">
+          <div class="live-dot"></div>
+          <div class="txt"><div class="t" id="liveCount">services connected</div><div class="s">Auto-detect · checks OAuth token validity every 5 min · pings provider API to confirm the account is live</div></div>
+          <div class="count">LIVE</div>
+        </div>
+        <div class="int-top">
+          <input type="text" class="int-search" placeholder="Search 50+ integrations…">
+          <button class="connect-all-btn" id="connectAllBtn" onclick="toggleConnectAll()">⚡ Connect All</button>
+        </div>
+        <div class="int-tabs">
+          <button class="int-tab active">All</button><button class="int-tab">Chat & Messaging</button><button class="int-tab">AI Models</button><button class="int-tab">Ad Networks</button><button class="int-tab">Productivity</button><button class="int-tab">Smart Home</button>
+        </div>
+
+        <div class="int-section">
+          <h2>Chat & Messaging <span class="count-pill">12</span></h2>
+          <div class="int-grid">
+            <div class="int-card"><div class="name">WhatsApp</div><div class="desc">Meta Business API</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
+            <div class="int-card"><div class="name">Telegram</div><div class="desc">Bot API</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
+            <div class="int-card"><div class="name">Slack</div><div class="desc">slack.com OAuth 2.0</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
+            <div class="int-card"><div class="name">Discord</div><div class="desc">discord.com/api OAuth</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">iMessage</div><div class="desc">macOS bridge</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">Microsoft Teams</div><div class="desc">graph.microsoft.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">Signal</div><div class="desc">signal-cli</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">WeChat</div><div class="desc">Tencent OAuth</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">Zalo</div><div class="desc">openapi.zalo.me</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">Matrix</div><div class="desc">Decentralized</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">Zoom</div><div class="desc">api.zoom.us/v2</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">Nostr</div><div class="desc">Public/private keys</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+          </div>
+        </div>
+
+        <div class="int-section">
+          <h2>AI Models <span class="count-pill">12</span></h2>
+          <div class="int-grid">
+            <div class="int-card"><div class="name">Claude Opus 4.6</div><div class="desc">api.anthropic.com</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
+            <div class="int-card"><div class="name">Claude Sonnet 4.6</div><div class="desc">api.anthropic.com</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
+            <div class="int-card"><div class="name">GPT-5 / o1</div><div class="desc">api.openai.com</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
+            <div class="int-card"><div class="name">Gemini 2.5 Pro</div><div class="desc">generativelanguage.googleapis</div><button class="int-toggle-btn itb-connected" data-state="connected">CONNECTED</button></div>
+            <div class="int-card"><div class="name">DeepSeek R2</div><div class="desc">Finance & coding</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
+            <div class="int-card"><div class="name">Grok 4</div><div class="desc">api.x.ai</div><button class="int-toggle-btn itb-connected" data-state="connected">CONNECTED</button></div>
+            <div class="int-card"><div class="name">Mistral Large</div><div class="desc">api.mistral.ai</div><button class="int-toggle-btn itb-connected" data-state="connected">CONNECTED</button></div>
+            <div class="int-card"><div class="name">Perplexity</div><div class="desc">api.perplexity.ai</div><button class="int-toggle-btn itb-connected" data-state="connected">CONNECTED</button></div>
+            <div class="int-card"><div class="name">OpenRouter</div><div class="desc">openrouter.ai/api</div><button class="int-toggle-btn itb-connected" data-state="connected">CONNECTED</button></div>
+            <div class="int-card"><div class="name">Hugging Face</div><div class="desc">Inference API</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">Vercel AI</div><div class="desc">ai-gateway.vercel.sh</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">Ollama / LM Studio</div><div class="desc">Local models</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+          </div>
+        </div>
+
+        <div class="int-section">
+          <h2>Ad Networks <span class="count-pill">8</span></h2>
+          <div class="int-grid">
+            <div class="int-card"><div class="name">Google Ads</div><div class="desc">googleads.googleapis.com</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
+            <div class="int-card"><div class="name">Meta Ads</div><div class="desc">FB & Instagram</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
+            <div class="int-card"><div class="name">TikTok Ads</div><div class="desc">business-api.tiktok.com</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
+            <div class="int-card"><div class="name">LinkedIn Ads</div><div class="desc">api.linkedin.com</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
+            <div class="int-card"><div class="name">Amazon Ads</div><div class="desc">advertising-api.amazon.com</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
+            <div class="int-card"><div class="name">Snapchat Ads</div><div class="desc">adsapi.snapchat.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">X Ads</div><div class="desc">ads-api.x.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">Microsoft Ads (Bing)</div><div class="desc">api.ads.microsoft.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+          </div>
+        </div>
+
+        <div class="int-section">
+          <h2>Productivity & Social <span class="count-pill">12</span></h2>
+          <div class="int-grid">
+            <div class="int-card"><div class="name">Gmail <span class="int-status ok" title="Token valid · verified 2m ago">ACTIVE</span></div><div class="desc">gmail.googleapis.com</div><button class="int-toggle-btn itb-live" data-state="live" data-service="gmail">LIVE</button></div>
+            <div class="int-card"><div class="name">Google Docs <span class="int-status ok" title="Token valid">ACTIVE</span></div><div class="desc">Docs API</div><button class="int-toggle-btn itb-live" data-state="live" data-service="google_docs">LIVE</button></div>
+            <div class="int-card"><div class="name">Calendar <span class="int-status ok" title="Token valid">ACTIVE</span></div><div class="desc">Google & Apple</div><button class="int-toggle-btn itb-live" data-state="live" data-service="calendar">LIVE</button></div>
+            <div class="int-card"><div class="name">Notion <span class="int-status ok" title="Token valid">ACTIVE</span></div><div class="desc">api.notion.com</div><button class="int-toggle-btn itb-live" data-state="live" data-service="notion">LIVE</button></div>
+            <div class="int-card"><div class="name">GitHub <span class="int-status ok" title="Token valid">ACTIVE</span></div><div class="desc">api.github.com</div><button class="int-toggle-btn itb-live" data-state="live" data-service="github">LIVE</button></div>
+            <div class="int-card"><div class="name">Trello</div><div class="desc">api.trello.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">Instagram</div><div class="desc">graph.facebook.com/v19</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">LinkedIn</div><div class="desc">api.linkedin.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">Snapchat</div><div class="desc">accounts.snapchat.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">Spotify</div><div class="desc">api.spotify.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">Uber</div><div class="desc">api.uber.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">Amazon</div><div class="desc">Login with Amazon</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+          </div>
+        </div>
+
+        <div class="int-section">
+          <h2>Smart Home & Tools <span class="count-pill">8</span></h2>
+          <div class="int-grid">
+            <div class="int-card"><div class="name">Philips Hue</div><div class="desc">developers.meethue.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">8 Sleep</div><div class="desc">Partner API</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">Sonos</div><div class="desc">developer.sonos.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">Home Assistant</div><div class="desc">Local hub</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">VS Code</div><div class="desc">Extension API</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">1Password</div><div class="desc">developer.1password.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">Weather</div><div class="desc">api.openweathermap.org</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="name">Stripe</div><div class="desc">api.stripe.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRICING -->
+      <section class="screen" id="pricing">
+        <div class="pricing-head">
+          <h1>Choose Your Plan</h1>
+          <p>Start with a 1-month free Pro trial · Annual plans are 12-month commitments · Monthly plans cancel anytime</p>
+        </div>
+        <div class="billing-toggle">
+          <span class="toggle-lbl" id="lbl-monthly" style="color:var(--muted)">Monthly</span>
+          <div class="toggle annual" id="toggle" onclick="toggleBilling()"></div>
+          <span class="toggle-lbl" id="lbl-annual">Annual</span>
+          <span class="save-pill">Save ~17%</span>
+        </div>
+        <div class="plans-grid">
+          <div class="plan featured">
+            <div class="save-tag">🎉 1-MONTH FREE TRIAL</div>
+            <div class="name">Pro</div>
+            <div class="price">
+              <span class="strike" id="pro-strike">$19</span>
+              <span id="pro-price">$0</span>
+              <span class="per" id="pro-per">/first month</span>
+            </div>
+            <div class="billing-note" id="pro-note">Then <strong>$19/mo</strong> billed annually ($228/yr) · 12-month commitment, no mid-term cancel</div>
+            <div class="trial-callout">⚡ First month free — full Pro access, no credit card required</div>
+            <ul>
+              <li>20 agent uses per 12h</li>
+              <li>10 advanced AI uses per 12h (Claude Opus 4.6, DeepSeek R2)</li>
+              <li>Pick any AI model in chat</li>
+              <li>Advanced budgeting powered by DeepSeek R2</li>
+              <li>Google Ads + TikTok Ads</li>
+              <li>Auto task creation & execution</li>
+              <li>Trip & hotel booking</li>
+              <li>Google Docs automation</li>
+              <li>50+ integrations</li>
+            </ul>
+            <button class="cta cta-upgrade">Start Free Trial →</button>
+            <div class="pay-link">Monthly link: <a href="https://pay.ez-pilot.com/pro/monthly">pay.ez-pilot.com/pro/monthly</a></div>
+          </div>
+
+          <div class="plan max">
+            <div class="save-tag">⚡ EVERYTHING UNLOCKED</div>
+            <div class="name">Max <span class="max-badge">PRO+</span></div>
+            <div class="price">
+              <span id="max-price">$90</span>
+              <span class="per">/month</span>
+            </div>
+            <div class="billing-note" id="max-note">Billed annually ($1,080/yr) · save $120/yr · 12-month commitment</div>
+            <ul>
+              <li>Everything in Pro</li>
+              <li><strong>Unlimited</strong> agent actions</li>
+              <li><strong>Unlimited</strong> Claude Opus 4.6 + DeepSeek R2</li>
+              <li>All 8 ad networks (Google, Meta, TikTok, LinkedIn, Amazon, Snap, X, Bing)</li>
+              <li>Real-time AI ad analysis & optimization</li>
+              <li>Priority agent execution</li>
+              <li>All 50+ integrations enabled</li>
+              <li>Premium support</li>
+            </ul>
+            <button class="cta cta-max">Upgrade to Max →</button>
+            <div class="pay-link">Monthly link: <a href="https://pay.ez-pilot.com/max/monthly">pay.ez-pilot.com/max/monthly</a></div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  const navItems = document.querySelectorAll('.nav-item');
+  const screens = document.querySelectorAll('.screen');
+
+  function goTo(id){
+    screens.forEach(s => s.classList.toggle('active', s.id === id));
+    navItems.forEach(n => n.classList.toggle('active', n.dataset.screen === id));
+    document.querySelector('.content').scrollTop = 0;
+  }
+  navItems.forEach(n => n.addEventListener('click', () => goTo(n.dataset.screen)));
+
+  // ===== LOGIN =====
+  function switchLoginTab(el, type){
+    document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    const inp = document.getElementById('login-id');
+    inp.placeholder = type === 'phone' ? '+1 (555) 123-4567' : 'you@example.com';
+    inp.type = type === 'phone' ? 'tel' : 'email';
+  }
+  function updateLoginButton(){
+    const accepted = document.getElementById('terms-accept').checked;
+    document.getElementById('login-cta').disabled = !accepted;
+  }
+  function doLogin(){
+    const accepted = document.getElementById('terms-accept').checked;
+    if(!accepted){
+      alert('You must agree to the Terms of Service and Privacy Policy to sign in.');
+      return;
+    }
+    // In production: call signInEmail / signInGoogle / signInMicrosoft from firebase-client.js
+    // which writes termsAcceptedAt: serverTimestamp() to Firestore.
+    document.getElementById('login-overlay').style.display = 'none';
+    startIntegrationAutoDetect();
+  }
+  function logout(){
+    document.getElementById('login-overlay').style.display = 'flex';
+    stopIntegrationAutoDetect();
+  }
+
+  // ===== PRICING =====
+  let isAnnual = true;
+  function toggleBilling(){
+    isAnnual = !isAnnual;
+    document.getElementById('toggle').classList.toggle('annual', isAnnual);
+    document.getElementById('lbl-monthly').style.color = isAnnual ? 'var(--muted)' : 'var(--ink)';
+    document.getElementById('lbl-annual').style.color = isAnnual ? 'var(--ink)' : 'var(--muted)';
+    if(isAnnual){
+      // Annual: 1-month free trial
+      document.getElementById('pro-strike').style.display = 'inline';
+      document.getElementById('pro-strike').textContent = '$19';
+      document.getElementById('pro-price').textContent = '$0';
+      document.getElementById('pro-per').textContent = '/first month';
+      document.getElementById('pro-note').innerHTML = 'Then <strong>$19/mo</strong> billed annually ($228/yr) · 12-month commitment, no mid-term cancel';
+      document.querySelector('#pricing .plan.featured .save-tag').innerHTML = '🎉 1-MONTH FREE TRIAL';
+      document.querySelector('#pricing .plan.featured .save-tag').style.display = 'block';
+      document.querySelector('#pricing .plan.featured .trial-callout').style.display = 'block';
+      document.getElementById('max-price').textContent = '$90';
+      document.getElementById('max-note').innerHTML = 'Billed annually ($1,080/yr) · save $120/yr · 12-month commitment';
+    } else {
+      // Monthly: no free trial
+      document.getElementById('pro-strike').style.display = 'none';
+      document.getElementById('pro-price').textContent = '$23';
+      document.getElementById('pro-per').textContent = '/month';
+      document.getElementById('pro-note').innerHTML = 'Billed monthly · cancel anytime · <strong>no free trial on monthly</strong>';
+      document.querySelector('#pricing .plan.featured .save-tag').style.display = 'none';
+      document.querySelector('#pricing .plan.featured .trial-callout').style.display = 'none';
+      document.getElementById('max-price').textContent = '$100';
+      document.getElementById('max-note').innerHTML = 'Billed monthly · cancel anytime';
+    }
+  }
+
+  // ===== TASKS =====
+  function updateTaskProgress(){
+    const tasks = document.querySelectorAll('#tasks .task');
+    if(!tasks.length) return;
+    const done = document.querySelectorAll('#tasks .task.done').length;
+    const pct = Math.round((done / tasks.length) * 100);
+    document.getElementById('task-fill').style.width = pct + '%';
+    document.getElementById('task-pct').textContent = pct + '%';
+  }
+  document.querySelectorAll('.task .check').forEach(c => {
+    c.addEventListener('click', () => {
+      const t = c.closest('.task');
+      t.classList.toggle('done');
+      c.textContent = t.classList.contains('done') ? '✓' : '';
+      updateTaskProgress();
+    });
+  });
+  updateTaskProgress();
+
+  // ===== INTEGRATIONS =====
+  function setIntegrationState(btn, state){
+    btn.dataset.state = state;
+    btn.classList.remove('itb-disconnected','itb-connected','itb-live');
+    if(state === 'disconnected'){ btn.classList.add('itb-disconnected'); btn.textContent = 'CONNECT'; }
+    else if(state === 'connected'){ btn.classList.add('itb-connected'); btn.textContent = 'CONNECTED'; }
+    else { btn.classList.add('itb-live'); btn.textContent = 'LIVE'; }
+    updateConnectAllBtn(); updateLiveCount();
+  }
+  document.querySelectorAll('.int-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setIntegrationState(btn, btn.dataset.state === 'disconnected' ? 'live' : 'disconnected');
+    });
+  });
+  function updateConnectAllBtn(){
+    const all = document.querySelectorAll('.int-toggle-btn');
+    const allConnected = Array.from(all).every(b => b.dataset.state !== 'disconnected');
+    const btn = document.getElementById('connectAllBtn');
+    if(allConnected){ btn.innerHTML = '🔌 Disconnect All'; btn.classList.add('disconnect-mode'); }
+    else { btn.innerHTML = '⚡ Connect All'; btn.classList.remove('disconnect-mode'); }
+  }
+  function updateLiveCount(){
+    const live = document.querySelectorAll('.int-toggle-btn[data-state="live"]').length;
+    const con = document.querySelectorAll('.int-toggle-btn[data-state="connected"]').length;
+    document.getElementById('liveCount').textContent = `${live + con} services connected`;
+  }
+  function toggleConnectAll(){
+    const all = document.querySelectorAll('.int-toggle-btn');
+    const allConnected = Array.from(all).every(b => b.dataset.state !== 'disconnected');
+    if(allConnected) all.forEach(b => setIntegrationState(b, 'disconnected'));
+    else all.forEach(b => setIntegrationState(b, 'live'));
+  }
+  updateConnectAllBtn(); updateLiveCount();
+
+  // ===== CHAT (real AI models via /api/chat backend proxy) =====
+  const conversation = [];
+  const activeContext = new Set();
+  const pendingAttachments = [];
+  let uploadsToday = 0;
+  const UPLOAD_LIMIT = 15; // Pro; backend enforces real limit
+
+  // Context pull pills
+  document.querySelectorAll('.context-pill').forEach(p => {
+    p.addEventListener('click', () => {
+      const c = p.dataset.context;
+      if(activeContext.has(c)){ activeContext.delete(c); p.classList.remove('active'); }
+      else { activeContext.add(c); p.classList.add('active'); }
+    });
+  });
+
+  // File upload (any type, Pro 15/24h, Max unlimited)
+  async function handleFileUpload(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    if(uploadsToday >= UPLOAD_LIMIT){
+      alert(`Pro plan limit: ${UPLOAD_LIMIT} files / 24h reached. Upgrade to Max for unlimited uploads.`);
+      return;
+    }
+    pendingAttachments.push({ name: file.name, size: file.size, type: file.type, file });
+    uploadsToday++;
+    document.getElementById('upload-counter').textContent = `📎 ${uploadsToday}/${UPLOAD_LIMIT} files today`;
+    // Show chip in composer
+    const chipBar = document.createElement('div');
+    chipBar.style.cssText = 'padding:8px 4px 0;display:flex;gap:6px;flex-wrap:wrap';
+    chipBar.innerHTML = `<span class="attach-chip">📎 ${file.name} (${Math.round(file.size/1024)} KB)</span>`;
+    document.querySelector('#chat .composer').insertBefore(chipBar, document.querySelector('#chat .composer-inner'));
+    // In production: upload via apiFetch('/api/upload', { method:'POST', body: formData })
+    e.target.value = '';
+  }
+
+  async function callRealModel(model, userMessage){
+    conversation.push({ role: 'user', content: userMessage });
+    try {
+      // In production: use apiFetch from firebase-client.js so Firebase ID token is attached
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          messages: conversation,
+          context: { pull: Array.from(activeContext) },
+          attachments: pendingAttachments.map(a => ({ name: a.name, type: a.type })),
+        }),
+      });
+      if(!res.ok) throw new Error(`API ${res.status}`);
+      const data = await res.json();
+      const text = data.text || '(empty response)';
+      conversation.push({ role: 'assistant', content: text });
+      pendingAttachments.length = 0;
+      return text;
+    } catch(err){
+      const contextNote = activeContext.size ? ` · pulling ${Array.from(activeContext).join(', ')}` : '';
+      const fallback = `[${model}${contextNote} · demo mode] Deploy /api/chat on your backend to enable real AI responses. The backend will hold your API keys and forward to the official model endpoint.`;
+      conversation.push({ role: 'assistant', content: fallback });
+      return fallback;
+    }
+  }
+
+  const input = document.getElementById('chat-input');
+  const msgs = document.getElementById('msgs');
+  const botAvatar = '<div class="avatar bot"><svg viewBox="0 0 1024 1024" style="width:24px;height:24px"><use href="#ezlogo"/></svg></div>';
+
+  async function sendMsg(){
+    const v = input.value.trim();
+    if(!v) return;
+    const attachChips = pendingAttachments.map(a => `<span class="attach-chip">📎 ${a.name}</span>`).join(' ');
+    const ctxChips = Array.from(activeContext).map(c => `<span class="tool-chip">🔍 pulling ${c}</span>`).join(' ');
+    const makeChip = activeContext.size ? '<span class="make-chip">⚙️ make.com workflow</span>' : '';
+    msgs.insertAdjacentHTML('beforeend', `<div class="msg user"><div class="avatar user">U</div><div class="bubble">${attachChips}${attachChips?'<br>':''}${v.replace(/</g,'&lt;')}</div></div>`);
+    input.value = '';
+    // Clear attach chip bar visual
+    document.querySelectorAll('#chat .composer > div:not(.composer-inner):not(.context-row)').forEach(d => d.remove());
+    msgs.scrollTop = msgs.scrollHeight;
+    msgs.insertAdjacentHTML('beforeend', `<div class="msg typing" id="typing-ind">${botAvatar}<div class="bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`);
+    msgs.scrollTop = msgs.scrollHeight;
+
+    const model = document.getElementById('model-select').value;
+    const reply = await callRealModel(model, v);
+    document.getElementById('typing-ind')?.remove();
+    msgs.insertAdjacentHTML('beforeend', `<div class="msg">${botAvatar}<div class="bubble">${ctxChips}${makeChip}${(ctxChips||makeChip)?'<br>':''}${reply.replace(/</g,'&lt;')}</div></div>`);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+  input?.addEventListener('keydown', e => { if(e.key === 'Enter') sendMsg(); });
+  document.querySelector('.send-btn')?.addEventListener('click', sendMsg);
+
+  // ===== AUTO-DETECT INTEGRATIONS =====
+  // Polls /api/integrations/verify for each connected service every 5 min.
+  // Backend pings the actual provider API (gmail.googleapis.com, github.com, etc)
+  // to confirm the OAuth token is live AND the account is still valid.
+  let autoDetectTimer = null;
+  async function checkIntegration(card){
+    const btn = card.querySelector('.int-toggle-btn');
+    const service = btn?.dataset.service;
+    const statusEl = card.querySelector('.int-status');
+    if(!service || btn.dataset.state === 'disconnected') return;
+    try {
+      const res = await fetch('/api/integrations/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ service }),
+      });
+      const data = await res.json();
+      if(statusEl){
+        statusEl.classList.toggle('ok', data.valid);
+        statusEl.classList.toggle('bad', !data.valid);
+        statusEl.textContent = data.valid ? 'ACTIVE' : 'EXPIRED';
+        statusEl.title = data.valid ? 'Token valid, account live' : `Re-auth needed: ${data.reason}`;
+      }
+    } catch(e){ /* offline / backend not deployed — keep existing state */ }
+  }
+  function startIntegrationAutoDetect(){
+    const run = () => {
+      document.querySelectorAll('.int-card').forEach(checkIntegration);
+    };
+    run();
+    autoDetectTimer = setInterval(run, 5 * 60 * 1000); // every 5 min
+  }
+  function stopIntegrationAutoDetect(){
+    if(autoDetectTimer) clearInterval(autoDetectTimer);
+    autoDetectTimer = null;
+  }
+</script>
+</body>
+</html>
