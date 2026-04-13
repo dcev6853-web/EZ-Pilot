@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EZ Pilot — Your Autonomous AI Agent</title>
+<meta name="description" content="EZ Pilot is your autonomous AI agent. Run ads, manage docs, book trips, track budgets, and reply to messages — all on autopilot. 1-month free Pro trial.">
+
+<link rel="canonical" href="https://ez-pilot.com/">
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="theme-color" content="#FFEB3B">
+
+<meta property="og:title" content="EZ Pilot — Your Autonomous AI Agent">
+<meta property="og:description" content="Run ads, manage docs, book trips, and reply to messages on autopilot.">
+<meta property="og:url" content="https://ez-pilot.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="EZ Pilot">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@ezpilot">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --yellow:#FFEB3B; --yellow-soft:#FFF7B8; --yellow-deep:#F4D000;
+    --ink:#0A0A0A; --ink-2:#2a2a2a; --muted:#6b6b6b; --muted-2:#9a9a9a;
+    --line:#ececec; --green:#10b981; --red:#ef4444;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Plus Jakarta Sans',-apple-system,sans-serif;
+    background:#fff;color:var(--ink);line-height:1.5;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+
+  /* ========= NAV ========= */
+  .nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 40px;background:rgba(255,255,255,.85);
+    backdrop-filter:saturate(180%) blur(20px);
+    -webkit-backdrop-filter:saturate(180%) blur(20px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-brand{display:flex;align-items:center;gap:10px}
+  .nav-brand svg{width:34px;height:34px}
+  .nav-brand .name{font-weight:800;font-size:17px;letter-spacing:-0.01em}
+  .nav-brand .domain{font-size:10px;color:var(--muted-2);font-weight:600;margin-top:1px}
+  .nav-brand-text{display:flex;flex-direction:column;line-height:1.05}
+  .nav-links{display:flex;gap:30px;align-items:center}
+  .nav-links a{font-size:14px;font-weight:500;color:var(--ink-2);transition:color .15s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-cta{display:flex;gap:10px;align-items:center}
+  .btn{padding:10px 18px;border-radius:10px;font-weight:700;font-size:13px;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+  .btn-ghost{color:var(--ink-2)}
+  .btn-ghost:hover{background:#f5f5f5}
+  .btn-primary{background:var(--yellow);color:var(--ink);border:1px solid var(--yellow-deep)}
+  .btn-primary:hover{background:var(--yellow-deep);transform:translateY(-1px);box-shadow:0 6px 18px rgba(244,208,0,.4)}
+  .btn-dark{background:var(--ink);color:var(--yellow)}
+  .btn-dark:hover{background:var(--ink-2)}
+  .menu-toggle{display:none;width:36px;height:36px;border-radius:10px;background:#fafafa;border:1px solid var(--line);align-items:center;justify-content:center;font-size:18px}
+
+  /* ========= HERO ========= */
+  .hero{
+    position:relative;padding:140px 24px 100px;text-align:center;
+    background:radial-gradient(ellipse at 50% 0%,rgba(255,235,59,.25) 0%,rgba(255,235,59,0) 50%),#fff;
+    overflow:hidden;
+  }
+  .hero::before{
+    content:"";position:absolute;top:0;left:50%;width:1200px;height:1200px;
+    transform:translateX(-50%);
+    background:radial-gradient(circle,rgba(255,235,59,.12) 0%,rgba(255,235,59,0) 60%);
+    pointer-events:none;z-index:0;
+  }
+  .hero-inner{position:relative;z-index:1;max-width:900px;margin:0 auto}
+  .trial-pill{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--yellow-soft);border:1px solid var(--yellow-deep);
+    padding:8px 16px;border-radius:999px;font-size:13px;font-weight:700;
+    margin-bottom:24px;color:#5a4a00;
+  }
+  .hero h1{
+    font-size:clamp(36px,6vw,68px);font-weight:800;letter-spacing:-0.03em;line-height:1.05;
+  }
+  .hero h1 .accent{
+    background:linear-gradient(135deg,#FFEB3B,#F4D000);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    display:block;
+  }
+  .hero .sub{
+    font-size:clamp(16px,2vw,19px);color:var(--muted);margin-top:20px;
+    max-width:640px;margin-left:auto;margin-right:auto;line-height:1.6;
+  }
+  .hero-cta{display:flex;gap:12px;justify-content:center;margin-top:34px;flex-wrap:wrap}
+  .btn-xl{padding:15px 28px;font-size:15px;border-radius:12px}
+  .hero-social{
+    display:flex;gap:26px;justify-content:center;margin-top:40px;flex-wrap:wrap;
+    font-size:13px;color:var(--muted);align-items:center;
+  }
+  .hero-social .item{display:flex;align-items:center;gap:7px;font-weight:500}
+  .hero-social .item::before{content:"✓";color:var(--green);font-weight:800}
+
+  .hero-preview{
+    max-width:1080px;margin:60px auto 0;
+    border-radius:24px;overflow:hidden;
+    box-shadow:0 40px 80px rgba(0,0,0,.12),0 0 0 1px var(--line);
+    background:#fff;position:relative;z-index:1;
+  }
+  .hero-preview img{width:100%;display:block}
+  .hero-preview-mock{
+    aspect-ratio:16/9;
+    background:linear-gradient(135deg,#fafafa,#f0f0f0);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+  }
+  .hero-preview-mock .mock-content{
+    display:grid;grid-template-columns:220px 1fr;
+    width:100%;height:100%;
+  }
+  .mock-sidebar{background:#fff;border-right:1px solid var(--line);padding:20px 14px}
+  .mock-sidebar-item{padding:10px 12px;border-radius:8px;font-size:12px;color:var(--muted);margin-bottom:4px}
+  .mock-sidebar-item.active{background:var(--yellow);color:var(--ink);font-weight:700}
+  .mock-main{padding:30px;display:flex;flex-direction:column;gap:16px}
+  .mock-title{font-size:22px;font-weight:800}
+  .mock-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .mock-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
+  .mock-card .l{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase}
+  .mock-card .v{font-size:18px;font-weight:800;margin-top:3px}
+  .mock-chat{flex:1;background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px}
+  .mock-msg{padding:9px 13px;border-radius:11px;font-size:12px;max-width:75%}
+  .mock-msg.user{background:var(--yellow);align-self:flex-end;font-weight:500}
+  .mock-msg.bot{background:#f5f5f5}
+
+  /* ========= LOGOS STRIP ========= */
+  .logos{
+    padding:50px 24px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    background:#fafafa;
+  }
+  .logos-title{text-align:center;font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:24px}
+  .logos-grid{
+    display:flex;gap:40px;justify-content:center;align-items:center;
+    flex-wrap:wrap;max-width:1100px;margin:0 auto;opacity:.7;
+  }
+  .logo-item{font-size:17px;font-weight:700;color:var(--ink-2);letter-spacing:-0.01em}
+  .logo-item.script{font-family:Georgia,serif;font-style:italic;font-size:22px}
+
+  /* ========= SECTION ========= */
+  section{padding:100px 24px}
+  .container{max-width:1200px;margin:0 auto}
+  .section-head{text-align:center;max-width:720px;margin:0 auto 60px}
+  .section-tag{
+    display:inline-block;background:var(--yellow-soft);color:#5a4a00;
+    padding:5px 13px;border-radius:999px;font-size:12px;font-weight:700;
+    margin-bottom:16px;border:1px solid var(--yellow-deep);
+  }
+  .section-head h2{font-size:clamp(28px,4vw,42px);font-weight:800;letter-spacing:-0.02em;line-height:1.15}
+  .section-head p{font-size:16px;color:var(--muted);margin-top:14px;line-height:1.6}
+
+  /* ========= FEATURES ========= */
+  .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .feature-card{
+    background:#fff;border:1px solid var(--line);border-radius:20px;padding:32px 28px;
+    transition:all .25s cubic-bezier(.2,.8,.2,1);
+  }
+  .feature-card:hover{border-color:var(--yellow-deep);transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.06)}
+  .feature-icon{
+    width:52px;height:52px;border-radius:14px;
+    background:linear-gradient(135deg,var(--yellow),var(--yellow-deep));
+    display:flex;align-items:center;justify-content:center;font-size:24px;
+    margin-bottom:22px;
+  }
+  .feature-card h3{font-size:19px;font-weight:800;letter-spacing:-0.01em}
+  .feature-card p{font-size:14px;color:var(--muted);margin-top:10px;line-height:1.65}
+
+  /* ========= HOW IT WORKS ========= */
+  .how-bg{background:linear-gradient(180deg,#fff,#fafafa)}
+  .steps{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+  .step{
+    background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px 22px;
+    position:relative;
+  }
+  .step-num{
+    width:32px;height:32px;border-radius:10px;
+    background:var(--ink);color:var(--yellow);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:14px;margin-bottom:14px;
+  }
+  .step h4{font-size:15px;font-weight:800;letter-spacing:-0.01em}
+  .step p{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.55}
+
+  /* ========= INTEGRATIONS WALL ========= */
+  .int-wall{
+    display:grid;grid-template-columns:repeat(6,1fr);gap:10px;
+    max-width:1080px;margin:0 auto;
+  }
+  .int-chip{
+    background:#fff;border:1px solid var(--line);
+    padding:16px 14px;border-radius:12px;text-align:center;
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    transition:all .2s;
+  }
+  .int-chip:hover{border-color:var(--yellow-deep);background:#fffdf2;transform:translateY(-2px)}
+  .int-chip .icon{
+    width:34px;height:34px;border-radius:9px;background:#f5f5f5;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;font-weight:800;
+  }
+  .int-chip .name{font-size:11px;font-weight:700;color:var(--ink-2)}
+  .int-more{
+    text-align:center;margin-top:32px;
+  }
+
+  /* ========= PRICING ========= */
+  .pricing-bg{background:linear-gradient(180deg,#fafafa,#fff)}
+  .billing-toggle{display:flex;align-items:center;justify-content:center;gap:12px;margin:28px 0 40px}
+  .toggle{width:48px;height:26px;background:var(--yellow);border-radius:999px;position:relative;cursor:pointer;border:1px solid var(--yellow-deep)}
+  .toggle::after{
+    content:"";width:20px;height:20px;border-radius:50%;background:#fff;
+    position:absolute;top:2px;left:2px;transition:transform .2s;
+    box-shadow:0 1px 3px rgba(0,0,0,.2);
+  }
+  .toggle.annual::after{transform:translateX(22px)}
+  .toggle-lbl{font-size:14px;font-weight:600}
+  .save-pill{background:var(--yellow);color:var(--ink);padding:4px 11px;border-radius:999px;font-size:11px;font-weight:700}
+  .plans{display:grid;grid-template-columns:1fr 1fr;gap:22px;max-width:860px;margin:0 auto}
+  .plan{
+    background:#fff;border:1px solid var(--line);border-radius:22px;padding:36px 32px;
+    position:relative;
+  }
+  .plan.featured{border:2px solid var(--yellow-deep);box-shadow:0 20px 50px rgba(244,208,0,.2)}
+  .plan.max{border:2px solid #0a0a0a;background:linear-gradient(180deg,#fff,#fafafa);box-shadow:0 20px 50px rgba(0,0,0,.18)}
+  .plan .save-tag{
+    position:absolute;top:-13px;left:50%;transform:translateX(-50%);
+    background:linear-gradient(135deg,#FFEB3B,#F4D000);color:var(--ink);
+    padding:7px 20px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap;
+    box-shadow:0 6px 18px rgba(244,208,0,.5);
+  }
+  .plan.max .save-tag{background:linear-gradient(135deg,#0a0a0a,#2a2a2a);color:var(--yellow)}
+  .plan .name{font-size:19px;font-weight:800;display:flex;align-items:center;gap:10px}
+  .max-badge{background:#0a0a0a;color:var(--yellow);padding:3px 9px;border-radius:6px;font-size:10px;font-weight:800;letter-spacing:0.04em}
+  .plan .price{font-size:52px;font-weight:800;letter-spacing:-0.025em;margin-top:10px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .plan .price .strike{font-size:26px;color:var(--muted-2);text-decoration:line-through;text-decoration-thickness:2px;font-weight:600}
+  .plan .price .per{font-size:14px;color:var(--muted);font-weight:500}
+  .plan .billing-note{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+  .plan .trial-callout{
+    margin-top:14px;padding:11px 16px;
+    background:linear-gradient(135deg,#fff7b8,#ffe66b);border:1px dashed var(--yellow-deep);
+    border-radius:10px;font-size:12px;color:#5a4a00;text-align:center;font-weight:700;
+  }
+  .plan ul{list-style:none;margin-top:22px;display:flex;flex-direction:column;gap:11px}
+  .plan li{font-size:14px;display:flex;align-items:flex-start;gap:10px;line-height:1.45}
+  .plan li::before{content:"✓";color:var(--green);font-weight:800;width:16px;flex-shrink:0}
+  .plan.max li::before{color:var(--yellow-deep)}
+  .plan .cta-btn{
+    display:block;width:100%;margin-top:26px;padding:15px;border-radius:12px;
+    font-weight:700;font-size:14px;text-align:center;
+  }
+  .cta-pro{background:linear-gradient(135deg,#FFEB3B,#F4D000);color:var(--ink);box-shadow:0 8px 22px rgba(244,208,0,.45)}
+  .cta-max{background:#0a0a0a;color:var(--yellow);box-shadow:0 8px 22px rgba(0,0,0,.35)}
+
+  /* ========= FAQ ========= */
+  .faq-list{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+  .faq-item{
+    background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:22px 26px;cursor:pointer;transition:all .15s;
+  }
+  .faq-item:hover{border-color:#d4d4d4}
+  .faq-item summary{
+    list-style:none;font-size:16px;font-weight:700;letter-spacing:-0.01em;
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+  }
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item summary::after{content:"+";font-size:22px;color:var(--muted-2);font-weight:400;transition:transform .15s}
+  .faq-item[open] summary::after{transform:rotate(45deg)}
+  .faq-item .answer{font-size:14px;color:var(--muted);margin-top:14px;line-height:1.65}
+
+  /* ========= CTA ========= */
+  .final-cta{
+    margin:0 24px;background:linear-gradient(135deg,#0a0a0a,#1a1a1a);
+    color:#fff;border-radius:28px;padding:70px 40px;text-align:center;
+    max-width:1100px;margin-left:auto;margin-right:auto;margin-bottom:80px;
+    position:relative;overflow:hidden;
+  }
+  .final-cta::before{
+    content:"";position:absolute;top:-100px;right:-100px;width:400px;height:400px;
+    background:radial-gradient(circle,rgba(255,235,59,.25),transparent 70%);
+    pointer-events:none;
+  }
+  .final-cta h2{font-size:clamp(28px,4vw,42px);font-weight:800;letter-spacing:-0.02em;position:relative}
+  .final-cta p{color:#aaa;font-size:16px;margin-top:14px;position:relative}
+  .final-cta .btn{margin-top:30px;position:relative}
+
+  /* ========= FOOTER ========= */
+  footer{
+    border-top:1px solid var(--line);padding:60px 24px 30px;background:#fafafa;
+  }
+  .footer-grid{
+    max-width:1200px;margin:0 auto;
+    display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;
+  }
+  .footer-brand .name{font-weight:800;font-size:18px;margin-top:10px}
+  .footer-brand p{font-size:13px;color:var(--muted);margin-top:10px;max-width:320px;line-height:1.6}
+  .footer-col h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;color:var(--muted)}
+  .footer-col a{display:block;font-size:14px;color:var(--ink-2);padding:5px 0;transition:color .15s}
+  .footer-col a:hover{color:var(--yellow-deep)}
+  .footer-bottom{
+    max-width:1200px;margin:40px auto 0;padding-top:24px;border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+    font-size:12px;color:var(--muted-2);
+  }
+
+  @media (max-width: 900px){
+    .nav{padding:12px 18px}
+    .nav-links{display:none}
+    .nav-cta .btn-ghost{display:none}
+    .menu-toggle{display:flex}
+    section{padding:70px 18px}
+    .features-grid{grid-template-columns:1fr}
+    .steps{grid-template-columns:1fr 1fr}
+    .int-wall{grid-template-columns:repeat(3,1fr)}
+    .plans{grid-template-columns:1fr}
+    .footer-grid{grid-template-columns:1fr 1fr;gap:28px}
+    .hero{padding:110px 18px 70px}
+    .hero-preview-mock .mock-content{grid-template-columns:1fr}
+    .mock-sidebar{display:none}
+    .mock-grid{grid-template-columns:repeat(2,1fr)}
+    .final-cta{padding:50px 24px}
+  }
+</style>
+</head>
+<body>
+
+<!-- Shared logo -->
+<svg style="display:none">
+  <symbol id="ezlogo" viewBox="0 0 1024 1024">
+    <rect width="1024" height="1024" rx="200" fill="#FFEB3B"/>
+    <rect x="280" y="144" width="64" height="96" rx="32" fill="#0a0a0a"/>
+    <rect x="680" y="144" width="64" height="96" rx="32" fill="#0a0a0a"/>
+    <rect x="192" y="224" width="640" height="576" rx="120" fill="#FFFFFF"/>
+    <rect x="320" y="384" width="96" height="96" rx="24" fill="#000000"/>
+    <rect x="608" y="384" width="96" height="96" rx="24" fill="#000000"/>
+    <rect x="352" y="608" width="320" height="48" rx="24" fill="#000000"/>
+    <circle cx="380" cy="440" r="12" fill="#FFF200"/>
+    <circle cx="668" cy="440" r="12" fill="#FFF200"/>
+  </symbol>
+</svg>
+
+<!-- ========= NAV ========= -->
+<nav class="nav">
+  <a href="/" class="nav-brand">
+    <svg><use href="#ezlogo"/></svg>
+    <div class="nav-brand-text">
+      <div class="name">EZ Pilot</div>
+      <div class="domain">ez-pilot.com</div>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how-it-works">How it works</a>
+    <a href="#integrations">Integrations</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <div class="nav-cta">
+    <a href="/ez-pilot.html" class="btn btn-ghost">Sign in</a>
+    <a href="/ez-pilot.html" class="btn btn-primary">Start free trial</a>
+    <button class="menu-toggle" onclick="toggleMobileNav()">☰</button>
+  </div>
+</nav>
+
+<!-- ========= HERO ========= -->
+<header class="hero">
+  <div class="hero-inner">
+    <div class="trial-pill">⚡ 1-month free Pro trial · No credit card required</div>
+    <h1>Your Autonomous<span class="accent">AI Pilot</span></h1>
+    <p class="sub">Run ads, manage docs, book trips, track budgets, and reply to messages — all on autopilot. Powered by Claude Opus 4.6, GPT-5, Gemini, DeepSeek R2, and more.</p>
+    <div class="hero-cta">
+      <a href="/ez-pilot.html" class="btn btn-primary btn-xl">🚀 Start Free Trial →</a>
+      <a href="#how-it-works" class="btn btn-ghost btn-xl" style="border:1px solid var(--line);background:#fff">▶ Watch how it works</a>
+    </div>
+    <div class="hero-social">
+      <span class="item">1-month free Pro trial</span>
+      <span class="item">50+ integrations</span>
+      <span class="item">9 AI models</span>
+      <span class="item">SOC-grade security</span>
+    </div>
+  </div>
+
+  <div class="hero-preview">
+    <div class="hero-preview-mock">
+      <div class="mock-content">
+        <aside class="mock-sidebar">
+          <div style="font-weight:800;font-size:13px;margin-bottom:18px">EZ Pilot</div>
+          <div class="mock-sidebar-item active">🏠 Home</div>
+          <div class="mock-sidebar-item">💬 Chat</div>
+          <div class="mock-sidebar-item">✓ Tasks</div>
+          <div class="mock-sidebar-item">📢 Ads</div>
+          <div class="mock-sidebar-item">💰 Budget</div>
+          <div class="mock-sidebar-item">🔌 Integrations</div>
+        </aside>
+        <main class="mock-main">
+          <div class="mock-title">Welcome back, Alex</div>
+          <div class="mock-grid">
+            <div class="mock-card"><div class="l">Tasks Today</div><div class="v">12</div></div>
+            <div class="mock-card"><div class="l">Balance</div><div class="v" style="color:var(--green)">$2,211</div></div>
+            <div class="mock-card"><div class="l">Ad Spend 7d</div><div class="v">$1,247</div></div>
+            <div class="mock-card"><div class="l">ROAS</div><div class="v">4.2×</div></div>
+          </div>
+          <div class="mock-chat">
+            <div class="mock-msg user">help me save $85 next month</div>
+            <div class="mock-msg bot">Pulled your budget. Cut dining out by half (−$31), walk/transit 2×/wk (−$25), meal-plan Sundays (−$30) = <b>$86 saved</b>. Want me to set a Sunday meal-plan reminder?</div>
+            <div class="mock-msg user">yes, go</div>
+            <div class="mock-msg bot">✓ Recurring Sunday 6 PM reminder added to your Google Calendar.</div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ========= LOGOS ========= -->
+<div class="logos">
+  <div class="logos-title">Powered by the world's best AI models</div>
+  <div class="logos-grid">
+    <div class="logo-item">Anthropic</div>
+    <div class="logo-item script">OpenAI</div>
+    <div class="logo-item">Google Gemini</div>
+    <div class="logo-item">xAI Grok</div>
+    <div class="logo-item">DeepSeek</div>
+    <div class="logo-item">Mistral</div>
+    <div class="logo-item">Perplexity</div>
+  </div>
+</div>
+
+<!-- ========= FEATURES ========= -->
+<section id="features">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-tag">✨ Features</div>
+      <h2>Everything on autopilot.<br>Nothing gets dropped.</h2>
+      <p>EZ Pilot watches your connected apps, drafts the work, and — once you approve — executes it end-to-end.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">💬</div>
+        <h3>Smart AI Chat</h3>
+        <p>Chat with any of 9 AI models. Upload files, pull context from your budget, tasks, and ads automatically. Ask anything, command anything.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">✓</div>
+        <h3>Auto-detected Tasks</h3>
+        <p>New Gmail, Slack, or GitHub activity auto-becomes a task. Validate it, and EZ Pilot executes — no manual to-do lists.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📢</div>
+        <h3>Autonomous Ads</h3>
+        <p>Launch Google, Meta, TikTok, LinkedIn, Amazon, Snap, X, and Bing ads from chat. Real-time AI optimization of bids and creatives.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💰</div>
+        <h3>AI Budget Analysis</h3>
+        <p>DeepSeek R2 analyzes your spending, spots waste, and drafts a plan to hit your savings goals — grounded in real data.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">✈️</div>
+        <h3>Book & Plan</h3>
+        <p>"Book me a flight to Tokyo, March 9, morning" — EZ Pilot finds it, books it, and drops the boarding pass in your wallet.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔌</div>
+        <h3>50+ Integrations</h3>
+        <p>Gmail, Docs, Slack, Notion, GitHub, Stripe, WhatsApp, Discord, Spotify, Hue, and more. Live auto-detect on OAuth token health.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========= HOW IT WORKS ========= -->
+<section id="how-it-works" class="how-bg">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-tag">⚙️ How it works</div>
+      <h2>Detect → Decide → Confirm → Execute → Learn</h2>
+      <p>A universal automation loop that works across every connected service.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h4>Detect</h4>
+        <p>EZ Pilot watches your Gmail, Slack, Calendar, GitHub, and 50+ other apps in real time.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h4>Decide</h4>
+        <p>The AI picks the best model for the task and drafts the action with reasoning.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h4>Confirm</h4>
+        <p>You validate the suggested action with a single tap. Full transparency, always.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h4>Execute</h4>
+        <p>Make.com workflows fire across every connected service — end to end, no manual steps.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <h4>Learn</h4>
+        <p>Every approval and edit trains your pilot to handle more with less oversight next time.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========= INTEGRATIONS ========= -->
+<section id="integrations">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-tag">🔌 Integrations</div>
+      <h2>Connects to everything you already use</h2>
+      <p>One OAuth per ecosystem unlocks entire suites. Sign in with Google once, get Gmail, Docs, Calendar, Drive, Sheets, and Ads.</p>
+    </div>
+    <div class="int-wall">
+      <div class="int-chip"><div class="icon">G</div><div class="name">Gmail</div></div>
+      <div class="int-chip"><div class="icon">📄</div><div class="name">Google Docs</div></div>
+      <div class="int-chip"><div class="icon">📅</div><div class="name">Calendar</div></div>
+      <div class="int-chip"><div class="icon" style="background:#5a1abf;color:#fff">S</div><div class="name">Slack</div></div>
+      <div class="int-chip"><div class="icon" style="background:#000;color:#fff">G</div><div class="name">GitHub</div></div>
+      <div class="int-chip"><div class="icon" style="background:#000;color:#fff">N</div><div class="name">Notion</div></div>
+      <div class="int-chip"><div class="icon" style="background:#25d366;color:#fff">W</div><div class="name">WhatsApp</div></div>
+      <div class="int-chip"><div class="icon" style="background:#0088cc;color:#fff">T</div><div class="name">Telegram</div></div>
+      <div class="int-chip"><div class="icon" style="background:#5865f2;color:#fff">D</div><div class="name">Discord</div></div>
+      <div class="int-chip"><div class="icon" style="background:#0078d4;color:#fff">T</div><div class="name">Teams</div></div>
+      <div class="int-chip"><div class="icon" style="background:#2d6cdf;color:#fff">Z</div><div class="name">Zoom</div></div>
+      <div class="int-chip"><div class="icon" style="background:#1877f2;color:#fff">f</div><div class="name">Meta Ads</div></div>
+      <div class="int-chip"><div class="icon" style="background:#4285f4;color:#fff">G</div><div class="name">Google Ads</div></div>
+      <div class="int-chip"><div class="icon" style="background:#000;color:#fff">♪</div><div class="name">TikTok Ads</div></div>
+      <div class="int-chip"><div class="icon" style="background:#0a66c2;color:#fff">in</div><div class="name">LinkedIn</div></div>
+      <div class="int-chip"><div class="icon" style="background:#ff9900;color:#000">a</div><div class="name">Amazon</div></div>
+      <div class="int-chip"><div class="icon" style="background:#fffc00;color:#000">👻</div><div class="name">Snapchat</div></div>
+      <div class="int-chip"><div class="icon" style="background:#000;color:#fff">𝕏</div><div class="name">X (Twitter)</div></div>
+      <div class="int-chip"><div class="icon" style="background:#1db954;color:#fff">S</div><div class="name">Spotify</div></div>
+      <div class="int-chip"><div class="icon" style="background:#635bff;color:#fff">S</div><div class="name">Stripe</div></div>
+      <div class="int-chip"><div class="icon" style="background:#000;color:#fff">U</div><div class="name">Uber</div></div>
+      <div class="int-chip"><div class="icon" style="background:#e4002b;color:#fff">H</div><div class="name">Philips Hue</div></div>
+      <div class="int-chip"><div class="icon" style="background:#007aff;color:#fff">V</div><div class="name">VS Code</div></div>
+      <div class="int-chip"><div class="icon" style="background:var(--yellow);color:var(--ink)">+28</div><div class="name">more</div></div>
+    </div>
+    <div class="int-more">
+      <a href="/ez-pilot.html#integrations" class="btn btn-primary">See all 50+ integrations →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ========= PRICING ========= -->
+<section id="pricing" class="pricing-bg">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-tag">💎 Pricing</div>
+      <h2>Simple, honest pricing</h2>
+      <p>Start with a 1-month free Pro trial on annual. Cancel monthly plans anytime.</p>
+    </div>
+    <div class="billing-toggle">
+      <span class="toggle-lbl" id="lbl-monthly" style="color:var(--muted)">Monthly</span>
+      <div class="toggle annual" id="toggle" onclick="toggleBilling()"></div>
+      <span class="toggle-lbl" id="lbl-annual">Annual</span>
+      <span class="save-pill">Save ~17%</span>
+    </div>
+    <div class="plans">
+      <div class="plan featured">
+        <div class="save-tag" id="save-tag">🎉 1-MONTH FREE TRIAL</div>
+        <div class="name">Pro</div>
+        <div class="price">
+          <span class="strike" id="pro-strike">$19</span>
+          <span id="pro-price">$0</span>
+          <span class="per" id="pro-per">/first month</span>
+        </div>
+        <div class="billing-note" id="pro-note">Then <strong>$19/mo</strong> billed annually ($228/yr) · 12-month commitment, no mid-term cancel</div>
+        <div class="trial-callout" id="trial-callout">⚡ First month free — full Pro access, no card required</div>
+        <ul>
+          <li>20 agent uses per 12h</li>
+          <li>10 advanced AI uses per 12h (Claude Opus 4.6, DeepSeek R2)</li>
+          <li>Pick any AI model in chat</li>
+          <li>Advanced budgeting (DeepSeek R2)</li>
+          <li>Google Ads + TikTok Ads</li>
+          <li>15 file uploads per 24h</li>
+          <li>50+ integrations</li>
+        </ul>
+        <a href="/ez-pilot.html" class="cta-btn cta-pro">Start Free Trial →</a>
+      </div>
+      <div class="plan max">
+        <div class="save-tag">⚡ EVERYTHING UNLOCKED</div>
+        <div class="name">Max <span class="max-badge">PRO+</span></div>
+        <div class="price">
+          <span id="max-price">$90</span>
+          <span class="per">/month</span>
+        </div>
+        <div class="billing-note" id="max-note">Billed annually ($1,080/yr) · save $120/yr · 12-month commitment</div>
+        <ul>
+          <li>Everything in Pro</li>
+          <li><strong>Unlimited</strong> agent actions</li>
+          <li><strong>Unlimited</strong> Claude Opus 4.6 + DeepSeek R2</li>
+          <li>All 8 ad networks (Google, Meta, TikTok, LinkedIn, Amazon, Snap, X, Bing)</li>
+          <li>Real-time AI ad optimization</li>
+          <li><strong>Unlimited</strong> file uploads</li>
+          <li>Priority agent execution</li>
+        </ul>
+        <a href="/ez-pilot.html" class="cta-btn cta-max">Upgrade to Max →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========= FAQ ========= -->
+<section id="faq">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-tag">❓ FAQ</div>
+      <h2>Questions, answered</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item">
+        <summary>How does the 1-month free trial work?</summary>
+        <div class="answer">Sign up for the Pro annual plan and get your first month free — no credit card required. At the end of the trial, your annual plan starts at $19/month. The free trial is only available on annual billing; monthly plans have no trial.</div>
+      </details>
+      <details class="faq-item">
+        <summary>Can I cancel anytime?</summary>
+        <div class="answer">Monthly plans can be cancelled anytime. Annual plans are 12-month commitments — you won't be able to cancel mid-term, but you save ~17% and lock in the lower price for the whole year.</div>
+      </details>
+      <details class="faq-item">
+        <summary>Which AI models do you use?</summary>
+        <div class="answer">All 9 major models: Claude Opus 4.6, Claude Sonnet 4.6, GPT-5, OpenAI o1, Gemini 2.5 Pro, Grok 4, DeepSeek R2, Mistral Large, and Perplexity. Pick your favorite directly in chat.</div>
+      </details>
+      <details class="faq-item">
+        <summary>Is my data secure?</summary>
+        <div class="answer">Yes. All data is encrypted in transit (HTTPS/TLS 1.2+) and at rest. We use Firebase Auth + Firestore with strict per-user security rules. API keys for AI providers live on our backend and never touch your browser. We never sell personal data.</div>
+      </details>
+      <details class="faq-item">
+        <summary>What can EZ Pilot actually do?</summary>
+        <div class="answer">Reply to emails, schedule meetings, book flights, launch and optimize ad campaigns on 8 networks, draft and save Google Docs, review GitHub PRs, analyze budgets, control smart home devices, reply to DMs, and much more. Anything you can do across 50+ connected apps, EZ Pilot can draft and execute for you.</div>
+      </details>
+      <details class="faq-item">
+        <summary>Does EZ Pilot act on its own?</summary>
+        <div class="answer">By default, EZ Pilot suggests actions and you confirm with one tap. You can turn on full auto-execute for trusted workflows, and always see a complete AI Work Log of every action taken on your behalf.</div>
+      </details>
+      <details class="faq-item">
+        <summary>What about file uploads?</summary>
+        <div class="answer">Pro users get 15 file uploads per 24 hours. Max users get unlimited uploads. Any file type is supported — PDFs, spreadsheets, images, code, audio, video — and the AI can process them directly in chat.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ========= FINAL CTA ========= -->
+<div class="final-cta">
+  <h2>Ready to put work on autopilot?</h2>
+  <p>1-month free Pro trial. No credit card. No lock-in.</p>
+  <a href="/ez-pilot.html" class="btn btn-primary btn-xl">🚀 Get Started Free →</a>
+</div>
+
+<!-- ========= FOOTER ========= -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <svg width="36" height="36"><use href="#ezlogo"/></svg>
+      <div class="name">EZ Pilot</div>
+      <p>Your autonomous AI agent. Run ads, manage docs, book trips, and reply to messages on autopilot.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#integrations">Integrations</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <a href="#faq">FAQ</a>
+      <a href="/cdn-cgi/l/email-protection#5a3e393f2c6c626f691a3d373b333674393537">Contact</a>
+      <a href="/ez-pilot.html">Sign in</a>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <a href="/terms.html">Terms of Service</a>
+      <a href="/privacy.html">Privacy Policy</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div>© 2026 EZ Pilot. All rights reserved.</div>
+    <div>🔒 ez-pilot.com · TLS 1.3 · Firebase secure</div>
+  </div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  // Pricing toggle — identical logic to the app pages
+  let isAnnual = true;
+  function toggleBilling(){
+    isAnnual = !isAnnual;
+    document.getElementById('toggle').classList.toggle('annual', isAnnual);
+    document.getElementById('lbl-monthly').style.color = isAnnual ? 'var(--muted)' : 'var(--ink)';
+    document.getElementById('lbl-annual').style.color = isAnnual ? 'var(--ink)' : 'var(--muted)';
+    if(isAnnual){
+      document.getElementById('pro-strike').style.display = 'inline';
+      document.getElementById('pro-strike').textContent = '$19';
+      document.getElementById('pro-price').textContent = '$0';
+      document.getElementById('pro-per').textContent = '/first month';
+      document.getElementById('pro-note').innerHTML = 'Then <strong>$19/mo</strong> billed annually ($228/yr) · 12-month commitment, no mid-term cancel';
+      document.getElementById('save-tag').innerHTML = '🎉 1-MONTH FREE TRIAL';
+      document.getElementById('save-tag').style.display = 'block';
+      document.getElementById('trial-callout').style.display = 'block';
+      document.getElementById('max-price').textContent = '$90';
+      document.getElementById('max-note').innerHTML = 'Billed annually ($1,080/yr) · save $120/yr · 12-month commitment';
+    } else {
+      document.getElementById('pro-strike').style.display = 'none';
+      document.getElementById('pro-price').textContent = '$23';
+      document.getElementById('pro-per').textContent = '/month';
+      document.getElementById('pro-note').innerHTML = 'Billed monthly · cancel anytime · <strong>no free trial on monthly</strong>';
+      document.getElementById('save-tag').style.display = 'none';
+      document.getElementById('trial-callout').style.display = 'none';
+      document.getElementById('max-price').textContent = '$100';
+      document.getElementById('max-note').innerHTML = 'Billed monthly · cancel anytime';
+    }
+  }
+
+  // Mobile nav (simple toggle — expand into sheet as needed)
+  function toggleMobileNav(){
+    const links = document.querySelector('.nav-links');
+    const isOpen = links.style.display === 'flex';
+    links.style.cssText = isOpen ? '' : `
+      display:flex;flex-direction:column;position:absolute;top:60px;left:0;right:0;
+      background:#fff;border-bottom:1px solid var(--line);padding:18px 24px;gap:14px;
+    `;
+  }
+
+  // Fade-in on scroll for feature cards
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if(e.isIntersecting){
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'none';
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.feature-card, .step, .plan').forEach(el => {
+    el.style.cssText += 'opacity:0;transfo
