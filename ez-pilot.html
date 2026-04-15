@@ -1008,6 +1008,16 @@
   // ============================================================
   const DEMO_MODE = true;
 
+  // Forever-free / admin accounts — these emails always have
+  // subscriptionActive=true and skip the payment gate entirely.
+  const ADMIN_EMAILS = [
+    'kateljj68@gmail.com',
+  ];
+  function isAdminEmail(id){
+    if(!id) return false;
+    return ADMIN_EMAILS.map(e => e.toLowerCase()).includes(String(id).toLowerCase().trim());
+  }
+
   // Local user store (only used in DEMO_MODE)
   function _getUsers(){
     try { return JSON.parse(localStorage.getItem('ezp_users') || '{}'); }
@@ -1024,18 +1034,20 @@
   async function demoSignup({ identifier, password, fullName }){
     const users = _getUsers();
     if(users[identifier]) throw new Error('An account with that email/phone already exists. Try signing in.');
+    const isAdmin = isAdminEmail(identifier);
     users[identifier] = {
       identifier,
       fullName,
       pwHash: await _hash(password),
       createdAt: new Date().toISOString(),
-      subscriptionActive: false,
+      subscriptionActive: isAdmin,    // admins skip payment gate
+      plan: isAdmin ? 'admin' : 'free',
     };
     _saveUsers(users);
     const token = 'demo_' + btoa(identifier).replace(/=/g,'') + '_' + Date.now();
     localStorage.setItem('ezp_token', token);
-    localStorage.setItem('ezp_user', JSON.stringify({ identifier, fullName }));
-    return { token, subscriptionActive: false };
+    localStorage.setItem('ezp_user', JSON.stringify({ identifier, fullName, plan: isAdmin ? 'admin' : 'free' }));
+    return { token, subscriptionActive: isAdmin };
   }
 
   async function demoLogin({ identifier, password }){
@@ -1046,8 +1058,16 @@
     if(user.pwHash !== pwHash) throw new Error('Incorrect password. Please try again.');
     const token = 'demo_' + btoa(identifier).replace(/=/g,'') + '_' + Date.now();
     localStorage.setItem('ezp_token', token);
-    localStorage.setItem('ezp_user', JSON.stringify({ identifier, fullName: user.fullName }));
-    return { token, subscriptionActive: !!user.subscriptionActive };
+    // Re-check admin status on every login (in case ADMIN_EMAILS changed)
+    const isAdmin = isAdminEmail(identifier);
+    if(isAdmin && !user.subscriptionActive){
+      user.subscriptionActive = true;
+      user.plan = 'admin';
+      users[identifier] = user;
+      _saveUsers(users);
+    }
+    localStorage.setItem('ezp_user', JSON.stringify({ identifier, fullName: user.fullName, plan: user.plan || 'free' }));
+    return { token, subscriptionActive: isAdmin || !!user.subscriptionActive };
   }
 
   const navItems = document.querySelectorAll('.nav-item');
@@ -1149,8 +1169,12 @@
       }
       if(data.token) localStorage.setItem('ezp_token', data.token);
       document.getElementById('login-overlay').style.display = 'none';
-      // New users always see payment gate
-      document.getElementById('payment-overlay').classList.add('show');
+      // Admins / users with active subscription skip payment gate
+      if(data.subscriptionActive){
+        startIntegrationAutoDetect();
+      } else {
+        document.getElementById('payment-overlay').classList.add('show');
+      }
     } catch(err){
       showLoginError(err.message || 'Could not create account.');
       btn.classList.remove('loading'); btn.textContent = 'Create Account →';
