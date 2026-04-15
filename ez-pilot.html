@@ -1025,22 +1025,31 @@
   }
   function _saveUsers(u){ localStorage.setItem('ezp_users', JSON.stringify(u)); }
 
-  // Tiny hash so passwords aren't stored as plain text in localStorage
-  async function _hash(s){
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  // Fast synchronous string hash — demo mode only, real auth uses backend bcrypt.
+  // Returns a 16-char hex string. Not cryptographically strong, but localStorage
+  // demo data doesn't need it, and this is ~1000x faster than crypto.subtle.
+  function _hash(s){
+    let h1 = 0xdeadbeef ^ 0, h2 = 0x41c6ce57 ^ 0;
+    for(let i = 0; i < s.length; i++){
+      const ch = s.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1>>>16), 2246822507) ^ Math.imul(h2 ^ (h2>>>13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2>>>16), 2246822507) ^ Math.imul(h1 ^ (h1>>>13), 3266489909);
+    return (h2>>>0).toString(16).padStart(8,'0') + (h1>>>0).toString(16).padStart(8,'0');
   }
 
-  async function demoSignup({ identifier, password, fullName }){
+  function demoSignup({ identifier, password, fullName }){
     const users = _getUsers();
     if(users[identifier]) throw new Error('An account with that email/phone already exists. Try signing in.');
     const isAdmin = isAdminEmail(identifier);
     users[identifier] = {
       identifier,
       fullName,
-      pwHash: await _hash(password),
+      pwHash: _hash(password),
       createdAt: new Date().toISOString(),
-      subscriptionActive: isAdmin,    // admins skip payment gate
+      subscriptionActive: isAdmin,
       plan: isAdmin ? 'admin' : 'free',
     };
     _saveUsers(users);
@@ -1050,15 +1059,13 @@
     return { token, subscriptionActive: isAdmin };
   }
 
-  async function demoLogin({ identifier, password }){
+  function demoLogin({ identifier, password }){
     const users = _getUsers();
     const user = users[identifier];
     if(!user) throw new Error('No account found with that email/phone. Try signing up instead.');
-    const pwHash = await _hash(password);
-    if(user.pwHash !== pwHash) throw new Error('Incorrect password. Please try again.');
+    if(user.pwHash !== _hash(password)) throw new Error('Incorrect password. Please try again.');
     const token = 'demo_' + btoa(identifier).replace(/=/g,'') + '_' + Date.now();
     localStorage.setItem('ezp_token', token);
-    // Re-check admin status on every login (in case ADMIN_EMAILS changed)
     const isAdmin = isAdminEmail(identifier);
     if(isAdmin && !user.subscriptionActive){
       user.subscriptionActive = true;
