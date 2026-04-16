@@ -638,26 +638,33 @@
       Cancel anytime during the trial — no charge.
     </div>
 
-    <div class="pay-plan-row">
+    <div class="pay-plan-row" style="grid-template-columns:1fr 1fr 1fr">
+      <div class="pay-plan" data-plan="starter" onclick="selectPayPlan(this)">
+        <div class="pp-name">Starter</div>
+        <div class="pp-price">$5.50<span style="font-size:11px;color:var(--muted);font-weight:500">/mo</span></div>
+        <div class="pp-note">GPT-4 · 20 replies/12h</div>
+      </div>
       <div class="pay-plan selected" data-plan="pro_annual" onclick="selectPayPlan(this)">
         <div class="pp-name">Pro · Annual</div>
         <div class="pp-price">$19<span style="font-size:11px;color:var(--muted);font-weight:500">/mo</span></div>
-        <div class="pp-note">1 month free · $228/yr after</div>
+        <div class="pp-note">1 month free · $228/yr</div>
       </div>
       <div class="pay-plan" data-plan="max_annual" onclick="selectPayPlan(this)">
         <div class="pp-name">Max · Annual</div>
         <div class="pp-price">$90<span style="font-size:11px;color:var(--muted);font-weight:500">/mo</span></div>
-        <div class="pp-note">$1,080/yr · save $120</div>
+        <div class="pp-note">Unlimited · $1,080/yr</div>
       </div>
+    </div>
+    <div class="pay-plan-row" style="grid-template-columns:1fr 1fr;max-width:340px;margin:0 auto 18px">
       <div class="pay-plan" data-plan="pro_monthly" onclick="selectPayPlan(this)">
-        <div class="pp-name">Pro · Monthly</div>
-        <div class="pp-price">$23<span style="font-size:11px;color:var(--muted);font-weight:500">/mo</span></div>
-        <div class="pp-note">No trial · cancel anytime</div>
+        <div class="pp-name">Pro Monthly</div>
+        <div class="pp-price">$23<span style="font-size:10px;color:var(--muted);font-weight:500">/mo</span></div>
+        <div class="pp-note">Cancel anytime</div>
       </div>
       <div class="pay-plan" data-plan="max_monthly" onclick="selectPayPlan(this)">
-        <div class="pp-name">Max · Monthly</div>
-        <div class="pp-price">$100<span style="font-size:11px;color:var(--muted);font-weight:500">/mo</span></div>
-        <div class="pp-note">No trial · cancel anytime</div>
+        <div class="pp-name">Max Monthly</div>
+        <div class="pp-price">$100<span style="font-size:10px;color:var(--muted);font-weight:500">/mo</span></div>
+        <div class="pp-note">Cancel anytime</div>
       </div>
     </div>
 
@@ -754,11 +761,12 @@
         <div class="chat-top">
           <h1>Chat</h1>
           <div style="display:flex;align-items:center;gap:14px">
-            <span class="chat-status">online · agent ready</span>
+            <span class="chat-status">online · ready</span>
             <div class="model-picker">🧠 <select id="model-select">
               <option>Claude Opus 4.6</option>
               <option>Claude Sonnet 4.6</option>
               <option>GPT-5</option>
+              <option>GPT-4</option>
               <option>OpenAI o1</option>
               <option>Gemini 2.5 Pro</option>
               <option>Grok 4</option>
