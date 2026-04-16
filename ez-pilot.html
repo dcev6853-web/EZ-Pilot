@@ -32,6 +32,53 @@
 <!-- Google Identity Services (real Sign In With Google) -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <meta name="google-signin-client_id" content="830406008027-2bc4rml155565po4pebupp2g1u4456ol.apps.googleusercontent.com">
+
+<!-- Firebase Authentication (modular SDK v10, loaded as ES modules) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import {
+    getAuth, setPersistence,
+    browserLocalPersistence, browserSessionPersistence,
+    createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    signInWithPopup, GoogleAuthProvider, OAuthProvider,
+    signOut, onAuthStateChanged, updateProfile, updatePassword,
+    EmailAuthProvider, reauthenticateWithCredential, sendPasswordResetEmail,
+    RecaptchaVerifier, signInWithPhoneNumber
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+
+  // ⚠️ REPLACE WITH YOUR ACTUAL FIREBASE PROJECT CONFIG
+  // From Firebase Console → Project Settings → General → Your apps → SDK setup
+  const firebaseConfig = {
+    apiKey: "REPLACE_WITH_YOUR_FIREBASE_API_KEY",
+    authDomain: "ez-pilot.firebaseapp.com",
+    projectId: "ez-pilot",
+    storageBucket: "ez-pilot.appspot.com",
+    messagingSenderId: "830406008027",
+    appId: "REPLACE_WITH_YOUR_FIREBASE_APP_ID"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const googleProvider = new GoogleAuthProvider();
+  // Request the same scopes used in the OAuth redirect flow
+  ['https://www.googleapis.com/auth/gmail.modify',
+   'https://www.googleapis.com/auth/documents',
+   'https://www.googleapis.com/auth/calendar',
+   'https://www.googleapis.com/auth/drive.file',
+   'https://www.googleapis.com/auth/adwords'
+  ].forEach(s => googleProvider.addScope(s));
+
+  // Expose to non-module script
+  window.firebaseAuth = {
+    auth,
+    googleProvider,
+    setPersistence, browserLocalPersistence, browserSessionPersistence,
+    createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    signInWithPopup, signOut, onAuthStateChanged, updateProfile, updatePassword,
+    EmailAuthProvider, reauthenticateWithCredential, sendPasswordResetEmail,
+    RecaptchaVerifier, signInWithPhoneNumber, OAuthProvider,
+  };
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
 <style>
   :root{
     --yellow:#FFEB3B;--yellow-soft:#FFF7B8;--yellow-deep:#F4D000;
@@ -516,55 +563,63 @@
   <div class="login-card">
     <svg class="lc-logo"><use href="#ezlogo"/></svg>
     <h1>Welcome to EZ Pilot</h1>
-    <div class="sub">Your autonomous AI agent</div>
+    <div class="sub">Your autonomous AI assistant</div>
     <div class="domain-pill">🔒 https://ez-pilot.com</div>
+
+    <!-- Email / Phone tabs -->
     <div class="login-tabs">
       <button class="login-tab active" onclick="switchLoginTab(this,'email')">Email</button>
       <button class="login-tab" onclick="switchLoginTab(this,'phone')">Phone</button>
     </div>
-    <input type="email" class="login-input" id="login-id" placeholder="you@example.com" autocomplete="email">
-    <input type="text" class="login-input" id="login-name" placeholder="Full name" autocomplete="name" style="display:none">
-    <input type="password" class="login-input" id="login-pw" placeholder="Password (min 8 chars)" autocomplete="current-password">
+
+    <!-- Email mode fields -->
+    <div id="email-fields">
+      <input type="email" class="login-input" id="login-id" placeholder="you@example.com" autocomplete="email" oninput="hideLoginError()">
+      <input type="text" class="login-input" id="login-name" placeholder="Full name" autocomplete="name" style="display:none" oninput="hideLoginError()">
+      <input type="password" class="login-input" id="login-pw" placeholder="Password (min 8 chars)" autocomplete="current-password" oninput="hideLoginError()">
+    </div>
+
+    <!-- Phone mode fields (hidden by default) -->
+    <div id="phone-fields" style="display:none">
+      <input type="tel" class="login-input" id="phone-number" placeholder="+1 555 123 4567" autocomplete="tel" oninput="hideLoginError()">
+      <div id="recaptcha-container"></div>
+      <div id="otp-section" style="display:none;margin-top:8px">
+        <input type="text" class="login-input" id="otp-code" placeholder="6-digit verification code" maxlength="6" inputmode="numeric" oninput="hideLoginError()">
+      </div>
+    </div>
+
     <div class="login-error" id="login-error"></div>
+
+    <label class="terms-check" style="margin-bottom:6px">
+      <input type="checkbox" id="remember-me">
+      <span>Remember me on this device</span>
+    </label>
     <label class="terms-check">
       <input type="checkbox" id="terms-accept" onchange="updateLoginButton()">
       <span>I agree to the <a href="/terms.html" target="_blank">Terms of Service</a> and <a href="/privacy.html" target="_blank">Privacy Policy</a></span>
     </label>
+
     <button class="login-cta" id="login-cta" onclick="doSubmit()" disabled>Sign In →</button>
+
     <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--muted)">
       <span id="auth-toggle-txt">Don't have an account?</span>
       <a href="javascript:void(0)" onclick="toggleAuthMode()" id="auth-toggle-btn" style="color:var(--yellow-deep);font-weight:700;text-decoration:none;margin-left:4px">Sign up</a>
     </div>
+
     <div class="ldivider">OR CONTINUE WITH</div>
 
-    <!-- Continue with Google — uses your real OAuth client ID -->
-    <button class="social-btn google-btn" onclick="doSocialLogin('google')" style="width:100%;margin-bottom:10px;padding:12px;font-weight:600;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;gap:10px">
-      <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-        <path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/>
-        <path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/>
-        <path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z"/>
-        <path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/>
-      </svg>
+    <!-- Continue with Google -->
+    <button class="social-btn" onclick="doGoogleSignIn()" style="width:100%;margin-bottom:8px;padding:12px;font-weight:600;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;gap:10px;border-radius:10px">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/><path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24c0 3.55.85 6.91 2.34 9.88l7.35-5.7z"/><path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/></svg>
       <span>Continue with Google</span>
     </button>
 
-    <!-- Hidden fallback: Google Identity Services button (used if popup OAuth needs it) -->
-    <div id="g_id_onload"
-         data-client_id="830406008027-2bc4rml155565po4pebupp2g1u4456ol.apps.googleusercontent.com"
-         data-callback="handleGoogleCredential"
-         data-auto_prompt="false"
-         data-context="signin"
-         data-ux_mode="popup"
-         style="display:none"></div>
+    <!-- Continue with Microsoft -->
+    <button class="social-btn" onclick="doMicrosoftSignIn()" style="width:100%;padding:12px;font-weight:600;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;gap:10px;border-radius:10px">
+      <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#F25022"/><rect x="11" y="1" width="9" height="9" fill="#7FBA00"/><rect x="1" y="11" width="9" height="9" fill="#00A4EF"/><rect x="11" y="11" width="9" height="9" fill="#FFB900"/></svg>
+      <span>Continue with Microsoft</span>
+    </button>
 
-    <div class="social-grid">
-      <button class="social-btn" onclick="doSocialLogin('facebook')">
-        <img src="https://cdn.simpleicons.org/facebook/1877f2" width="16" height="16" alt=""> Facebook
-      </button>
-      <button class="social-btn" onclick="doSocialLogin('microsoft')">
-        <img src="https://cdn.simpleicons.org/microsoft" width="16" height="16" alt=""> Microsoft
-      </button>
-    </div>
     <div class="login-foot">You must agree to the Terms & Privacy Policy to sign in.<br>New here? <strong>1-month Pro trial included</strong>.</div>
   </div>
 </div>
@@ -638,6 +693,7 @@
       <div class="nav-item" data-screen="budget"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Budget</div>
       <div class="nav-item" data-screen="integrations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Integrations</div>
       <div class="nav-item" data-screen="pricing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Pricing</div>
+      <div class="nav-item" data-screen="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</div>
     </nav>
     <div class="plan-card">
       <div class="title">⚡ Free Trial</div>
@@ -995,627 +1051,513 @@
         </div>
       </section>
 
+      <!-- PROFILE -->
+      <section class="screen" id="profile">
+        <div class="page">
+          <div class="page-head">
+            <h1>Profile</h1>
+            <button class="ai-pill" onclick="logout()">Sign out →</button>
+          </div>
+          <div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:18px;margin-bottom:24px">
+              <div id="profile-avatar" style="width:64px;height:64px;border-radius:16px;background:var(--yellow);color:var(--ink);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:26px">A</div>
+              <div>
+                <div id="profile-display-name" style="font-size:20px;font-weight:800;letter-spacing:-0.01em">—</div>
+                <div id="profile-email" style="font-size:13px;color:var(--muted);margin-top:2px">—</div>
+                <div id="profile-plan-pill" style="display:inline-block;margin-top:6px;padding:3px 10px;border-radius:999px;background:var(--yellow-soft);color:#5a4a00;font-size:11px;font-weight:700">FREE</div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div>
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);display:block;margin-bottom:6px">Display name</label>
+                <input type="text" id="profile-name-input" style="width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fafafa">
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);display:block;margin-bottom:6px">Email or phone</label>
+                <input type="text" id="profile-id-input" disabled style="width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#f5f5f5;color:var(--muted-2)">
+                <div style="font-size:11px;color:var(--muted);margin-top:4px">Contact support to change your sign-in identifier.</div>
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);display:block;margin-bottom:6px">Bio (optional)</label>
+                <textarea id="profile-bio-input" rows="3" placeholder="A short description of yourself" style="width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fafafa;font-family:inherit;resize:vertical"></textarea>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:6px">
+                <button onclick="saveProfile()" style="flex:1;padding:13px;background:var(--yellow);color:var(--ink);border:1px solid var(--yellow-deep);border-radius:10px;font-weight:700;font-size:14px;cursor:pointer">Save changes</button>
+                <button onclick="loadProfile()" style="padding:13px 22px;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;font-weight:600;font-size:14px;cursor:pointer">Reset</button>
+              </div>
+              <div id="profile-status" style="font-size:12px;font-weight:600;text-align:center;margin-top:4px;display:none"></div>
+            </div>
+          </div>
+
+          <div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px">
+            <h3 style="font-size:14px;font-weight:800;margin-bottom:12px">Change password</h3>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <input type="password" id="pw-current" placeholder="Current password" style="width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fafafa">
+              <input type="password" id="pw-new" placeholder="New password (min 8 chars)" style="width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fafafa">
+              <button onclick="changePassword()" style="padding:11px;background:var(--ink);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer">Update password</button>
+              <div id="pw-status" style="font-size:12px;font-weight:600;text-align:center;display:none"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </div>
   </main>
 </div>
 
 <script>
   // ============================================================
-  // DEMO MODE — set to false once your backend at /api/* is live
-  // When true: sign-in/sign-up work entirely in the browser using
-  // localStorage. No backend needed. Users still go through the
-  // payment gate after sign-in/sign-up.
+  // EZ PILOT — Firebase Auth (Email, Phone OTP, Google, Microsoft)
   // ============================================================
-  const DEMO_MODE = true;
 
-  // Forever-free / admin accounts — these emails always have
-  // subscriptionActive=true and skip the payment gate entirely.
-  const ADMIN_EMAILS = [
-    'kateljj68@gmail.com',
-  ];
-  function isAdminEmail(id){
-    if(!id) return false;
-    return ADMIN_EMAILS.map(e => e.toLowerCase()).includes(String(id).toLowerCase().trim());
+  // Admin emails — skip payment gate, forever free
+  const ADMIN_EMAILS = ['kateljj68@gmail.com'];
+  function isAdmin(e){ return e && ADMIN_EMAILS.map(x=>x.toLowerCase()).includes(String(e).toLowerCase().trim()); }
+
+  // Profile data in localStorage per uid
+  function gP(uid){ try{return JSON.parse(localStorage.getItem('ezp_p_'+uid)||'{}')}catch(e){return{}} }
+  function sP(uid,d){ localStorage.setItem('ezp_p_'+uid,JSON.stringify(d)) }
+
+  // Wait for Firebase module to expose itself
+  function fbReady(){
+    return new Promise(r=>{if(window.firebaseAuth)return r(window.firebaseAuth);window.addEventListener('firebase-ready',()=>r(window.firebaseAuth),{once:true})});
   }
 
-  // Local user store (only used in DEMO_MODE)
-  function _getUsers(){
-    try { return JSON.parse(localStorage.getItem('ezp_users') || '{}'); }
-    catch(e) { return {}; }
+  // Friendly Firebase errors
+  function fErr(e){
+    const m={'auth/email-already-in-use':'Email already in use. Try signing in.','auth/invalid-email':'Invalid email.','auth/weak-password':'Password too weak (8+ chars).','auth/user-not-found':'No account found. Sign up first.','auth/wrong-password':'Incorrect password.','auth/invalid-credential':'Invalid email or password.','auth/too-many-requests':'Too many attempts. Wait a few minutes.','auth/network-request-failed':'Network error. Check connection.','auth/popup-closed-by-user':'Sign-in popup was closed.','auth/popup-blocked':'Popup blocked. Allow popups.','auth/account-exists-with-different-credential':'Account exists with different method.','auth/invalid-verification-code':'Invalid verification code.','auth/code-expired':'Code expired. Resend.',};
+    return m[e?.code]||e?.message||'Something went wrong.';
   }
-  function _saveUsers(u){ localStorage.setItem('ezp_users', JSON.stringify(u)); }
 
-  // Fast synchronous string hash — demo mode only, real auth uses backend bcrypt.
-  // Returns a 16-char hex string. Not cryptographically strong, but localStorage
-  // demo data doesn't need it, and this is ~1000x faster than crypto.subtle.
-  function _hash(s){
-    let h1 = 0xdeadbeef ^ 0, h2 = 0x41c6ce57 ^ 0;
-    for(let i = 0; i < s.length; i++){
-      const ch = s.charCodeAt(i);
-      h1 = Math.imul(h1 ^ ch, 2654435761);
-      h2 = Math.imul(h2 ^ ch, 1597334677);
+  // After successful auth, handle admin/payment flow
+  function postAuth(user){
+    const email = user.email || user.phoneNumber || '';
+    const admin = isAdmin(email);
+    let profile = gP(user.uid);
+    if(!profile.identifier){
+      profile = {identifier:email, fullName:user.displayName||email, displayName:user.displayName||email, bio:'', plan:admin?'admin':'free', subscriptionActive:admin};
     }
-    h1 = Math.imul(h1 ^ (h1>>>16), 2246822507) ^ Math.imul(h2 ^ (h2>>>13), 3266489909);
-    h2 = Math.imul(h2 ^ (h2>>>16), 2246822507) ^ Math.imul(h1 ^ (h1>>>13), 3266489909);
-    return (h2>>>0).toString(16).padStart(8,'0') + (h1>>>0).toString(16).padStart(8,'0');
-  }
-
-  function demoSignup({ identifier, password, fullName }){
-    const users = _getUsers();
-    if(users[identifier]) throw new Error('An account with that email/phone already exists. Try signing in.');
-    const isAdmin = isAdminEmail(identifier);
-    users[identifier] = {
-      identifier,
-      fullName,
-      pwHash: _hash(password),
-      createdAt: new Date().toISOString(),
-      subscriptionActive: isAdmin,
-      plan: isAdmin ? 'admin' : 'free',
-    };
-    _saveUsers(users);
-    const token = 'demo_' + btoa(identifier).replace(/=/g,'') + '_' + Date.now();
-    localStorage.setItem('ezp_token', token);
-    localStorage.setItem('ezp_user', JSON.stringify({ identifier, fullName, plan: isAdmin ? 'admin' : 'free' }));
-    return { token, subscriptionActive: isAdmin };
-  }
-
-  function demoLogin({ identifier, password }){
-    const users = _getUsers();
-    const user = users[identifier];
-    if(!user) throw new Error('No account found with that email/phone. Try signing up instead.');
-    if(user.pwHash !== _hash(password)) throw new Error('Incorrect password. Please try again.');
-    const token = 'demo_' + btoa(identifier).replace(/=/g,'') + '_' + Date.now();
-    localStorage.setItem('ezp_token', token);
-    const isAdmin = isAdminEmail(identifier);
-    if(isAdmin && !user.subscriptionActive){
-      user.subscriptionActive = true;
-      user.plan = 'admin';
-      users[identifier] = user;
-      _saveUsers(users);
+    if(admin){ profile.subscriptionActive=true; profile.plan='admin'; }
+    sP(user.uid, profile);
+    localStorage.setItem('ezp_user', JSON.stringify({uid:user.uid, identifier:email, fullName:profile.displayName, plan:profile.plan}));
+    document.getElementById('login-overlay').style.display='none';
+    if(admin || profile.subscriptionActive){
+      startIntegrationAutoDetect();
+    } else {
+      document.getElementById('payment-overlay').classList.add('show');
     }
-    localStorage.setItem('ezp_user', JSON.stringify({ identifier, fullName: user.fullName, plan: user.plan || 'free' }));
-    return { token, subscriptionActive: isAdmin || !!user.subscriptionActive };
   }
 
+  // ===== NAV =====
   const navItems = document.querySelectorAll('.nav-item');
   const screens = document.querySelectorAll('.screen');
-
   function goTo(id){
-    screens.forEach(s => s.classList.toggle('active', s.id === id));
-    navItems.forEach(n => n.classList.toggle('active', n.dataset.screen === id));
-    document.querySelector('.content').scrollTop = 0;
+    screens.forEach(s=>s.classList.toggle('active',s.id===id));
+    navItems.forEach(n=>n.classList.toggle('active',n.dataset.screen===id));
+    document.querySelector('.content').scrollTop=0;
   }
-  navItems.forEach(n => n.addEventListener('click', () => goTo(n.dataset.screen)));
+  navItems.forEach(n=>n.addEventListener('click',()=>goTo(n.dataset.screen)));
 
-  // ===== AUTH MODE TOGGLE (login ↔ signup) =====
-  let authMode = 'login'; // 'login' | 'signup'
+  // ===== LOGIN UI =====
+  let authMode = 'login'; // login | signup
+  let loginTab = 'email'; // email | phone
+
+  function switchLoginTab(el, type){
+    document.querySelectorAll('.login-tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    loginTab = type;
+    document.getElementById('email-fields').style.display = type==='email' ? 'block' : 'none';
+    document.getElementById('phone-fields').style.display = type==='phone' ? 'block' : 'none';
+    document.getElementById('otp-section').style.display = 'none';
+    hideLoginError();
+    // Update button text
+    if(type==='phone'){
+      document.getElementById('login-cta').textContent = 'Send verification code';
+    } else {
+      document.getElementById('login-cta').textContent = authMode==='signup' ? 'Create Account →' : 'Sign In →';
+    }
+  }
+
   function toggleAuthMode(){
-    authMode = (authMode === 'login') ? 'signup' : 'login';
+    authMode = authMode==='login' ? 'signup' : 'login';
     const nameField = document.getElementById('login-name');
     const cta = document.getElementById('login-cta');
     const txt = document.getElementById('auth-toggle-txt');
     const btn = document.getElementById('auth-toggle-btn');
-    const idEl = document.getElementById('login-id');
-    if(authMode === 'signup'){
-      nameField.style.display = 'block';
-      cta.textContent = 'Create Account →';
-      txt.textContent = 'Already have an account?';
-      btn.textContent = 'Sign in';
-      idEl.placeholder = (idEl.dataset.type === 'phone') ? '+1 (555) 123-4567' : 'you@example.com';
+    if(authMode==='signup'){
+      nameField.style.display='block'; cta.textContent='Create Account →';
+      txt.textContent='Already have an account?'; btn.textContent='Sign in';
     } else {
-      nameField.style.display = 'none';
-      cta.textContent = 'Sign In →';
-      txt.textContent = "Don't have an account?";
-      btn.textContent = 'Sign up';
+      nameField.style.display='none'; cta.textContent='Sign In →';
+      txt.textContent="Don't have an account?"; btn.textContent='Sign up';
     }
     hideLoginError();
   }
 
-  function doSubmit(){
-    if(authMode === 'signup') return doSignup();
-    return doLogin();
-  }
-
-  async function doSignup(){
-    hideLoginError();
-    if(!document.getElementById('terms-accept').checked){
-      showLoginError('You must agree to Terms & Privacy to create an account.');
-      return;
-    }
-    const idEl = document.getElementById('login-id');
-    const nameEl = document.getElementById('login-name');
-    const pwEl = document.getElementById('login-pw');
-    const id = idEl.value.trim();
-    const name = nameEl.value.trim();
-    const pw = pwEl.value;
-    const type = idEl.dataset.type || 'email';
-
-    if(!name || name.length < 2){
-      nameEl.classList.add('invalid');
-      showLoginError('Please enter your full name.');
-      return;
-    }
-    nameEl.classList.remove('invalid');
-
-    if(!id){
-      idEl.classList.add('invalid');
-      showLoginError((type==='email'?'Email':'Phone number') + ' is required.');
-      return;
-    }
-    const idError = validateIdentifier(type, id);
-    if(idError){ idEl.classList.add('invalid'); showLoginError(idError); return; }
-    idEl.classList.remove('invalid');
-
-    if(!pw || pw.length < 8){
-      pwEl.classList.add('invalid');
-      showLoginError('Password must be at least 8 characters.');
-      return;
-    }
-    pwEl.classList.remove('invalid');
-
-    const btn = document.getElementById('login-cta');
-    btn.classList.add('loading'); btn.textContent = 'Creating account';
-    try {
-      let data;
-      if(DEMO_MODE){
-        data = await demoSignup({ identifier: id, password: pw, fullName: name });
-      } else {
-        const res = await fetch('/api/auth/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fullName: name, identifier: id, identifierType: type,
-            password: pw, termsAccepted: true, acceptedAt: new Date().toISOString(),
-          }),
-        });
-        if(!res.ok){
-          const err = await res.json().catch(()=>({error:'Sign-up failed'}));
-          throw new Error(err.error || 'Could not create account');
-        }
-        data = await res.json();
-      }
-      if(data.token) localStorage.setItem('ezp_token', data.token);
-      document.getElementById('login-overlay').style.display = 'none';
-      // Admins / users with active subscription skip payment gate
-      if(data.subscriptionActive){
-        startIntegrationAutoDetect();
-      } else {
-        document.getElementById('payment-overlay').classList.add('show');
-      }
-    } catch(err){
-      showLoginError(err.message || 'Could not create account.');
-      btn.classList.remove('loading'); btn.textContent = 'Create Account →';
-    }
-  }
-
-  // ===== LOGIN (production-grade validation) =====
-  function switchLoginTab(el, type){
-    document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
-    el.classList.add('active');
-    const inp = document.getElementById('login-id');
-    inp.dataset.type = type;
-    inp.placeholder = type === 'phone' ? '+1 (555) 123-4567' : 'you@example.com';
-    inp.type = type === 'phone' ? 'tel' : 'email';
-    inp.autocomplete = type === 'phone' ? 'tel' : 'email';
-    inp.classList.remove('invalid');
-    hideLoginError();
-  }
   function updateLoginButton(){
-    const accepted = document.getElementById('terms-accept').checked;
-    document.getElementById('login-cta').disabled = !accepted;
+    document.getElementById('login-cta').disabled = !document.getElementById('terms-accept').checked;
   }
   function showLoginError(msg){
-    const el = document.getElementById('login-error');
-    el.textContent = msg;
-    el.classList.add('show');
+    const el=document.getElementById('login-error'); el.textContent=msg; el.classList.add('show');
   }
   function hideLoginError(){
     document.getElementById('login-error').classList.remove('show');
+    // Clear invalid styling on all inputs
+    document.querySelectorAll('.login-input.invalid').forEach(i=>i.classList.remove('invalid'));
   }
 
-  // Strict validators — production-grade
-  const EMAIL_RE = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  const PHONE_RE = /^\+?[1-9]\d{7,14}$/; // E.164 format: +1234567890
-
-  function validateIdentifier(type, value){
-    if(type === 'email'){
-      if(!EMAIL_RE.test(value)) return 'Please enter a valid email address.';
-    } else {
-      const clean = value.replace(/[\s\-\(\)]/g, '');
-      if(!PHONE_RE.test(clean)) return 'Please enter a valid phone number with country code (e.g. +15551234567).';
-    }
-    return null;
-  }
-
-  async function doLogin(){
-    hideLoginError();
+  // ===== MAIN SUBMIT =====
+  function doSubmit(){
     if(!document.getElementById('terms-accept').checked){
-      showLoginError('You must agree to the Terms of Service and Privacy Policy to sign in.');
+      showLoginError('You must agree to Terms & Privacy.');
       return;
     }
-    const idEl = document.getElementById('login-id');
-    const pwEl = document.getElementById('login-pw');
-    const id = idEl.value.trim();
-    const pw = pwEl.value;
-    const type = idEl.dataset.type || 'email';
+    if(loginTab==='phone') return doPhoneAuth();
+    if(authMode==='signup') return doEmailSignup();
+    return doEmailSignin();
+  }
 
-    // Identifier validation
-    if(!id){
-      idEl.classList.add('invalid');
-      showLoginError(type === 'email' ? 'Email is required.' : 'Phone number is required.');
-      return;
+  // ===== EMAIL SIGN IN =====
+  async function doEmailSignin(){
+    hideLoginError();
+    const id = document.getElementById('login-id').value.trim();
+    const pw = document.getElementById('login-pw').value;
+    if(!id){document.getElementById('login-id').classList.add('invalid');showLoginError('Email is required.');return}
+    if(!pw||pw.length<8){document.getElementById('login-pw').classList.add('invalid');showLoginError('Password must be 8+ chars.');return}
+    const btn=document.getElementById('login-cta');
+    btn.classList.add('loading'); btn.textContent='Signing in…';
+    try{
+      const fb=await fbReady();
+      const remember=document.getElementById('remember-me')?.checked;
+      await fb.setPersistence(fb.auth, remember?fb.browserLocalPersistence:fb.browserSessionPersistence);
+      const cred=await fb.signInWithEmailAndPassword(fb.auth, id, pw);
+      if(remember) localStorage.setItem('ezp_remember',id);
+      postAuth(cred.user);
+    }catch(err){
+      showLoginError(fErr(err));
+      btn.classList.remove('loading'); btn.textContent='Sign In →';
     }
-    const idError = validateIdentifier(type, id);
-    if(idError){
-      idEl.classList.add('invalid');
-      showLoginError(idError);
-      return;
-    }
-    idEl.classList.remove('invalid');
+  }
 
-    // Password validation
-    if(!pw || pw.length < 8){
-      pwEl.classList.add('invalid');
-      showLoginError('Password must be at least 8 characters.');
-      return;
+  // ===== EMAIL SIGN UP =====
+  async function doEmailSignup(){
+    hideLoginError();
+    const id=document.getElementById('login-id').value.trim();
+    const name=document.getElementById('login-name').value.trim();
+    const pw=document.getElementById('login-pw').value;
+    if(!name||name.length<2){document.getElementById('login-name').classList.add('invalid');showLoginError('Full name required.');return}
+    if(!id){document.getElementById('login-id').classList.add('invalid');showLoginError('Email required.');return}
+    if(!pw||pw.length<8){document.getElementById('login-pw').classList.add('invalid');showLoginError('Password must be 8+ chars.');return}
+    const btn=document.getElementById('login-cta');
+    btn.classList.add('loading'); btn.textContent='Creating account…';
+    try{
+      const fb=await fbReady();
+      const remember=document.getElementById('remember-me')?.checked;
+      await fb.setPersistence(fb.auth, remember?fb.browserLocalPersistence:fb.browserSessionPersistence);
+      const cred=await fb.createUserWithEmailAndPassword(fb.auth, id, pw);
+      await fb.updateProfile(cred.user, {displayName:name});
+      if(remember) localStorage.setItem('ezp_remember',id);
+      postAuth(cred.user);
+    }catch(err){
+      showLoginError(fErr(err));
+      btn.classList.remove('loading'); btn.textContent='Create Account →';
     }
-    pwEl.classList.remove('invalid');
+  }
 
-    // Call backend (or demo mode if DEMO_MODE === true)
-    const btn = document.getElementById('login-cta');
-    btn.classList.add('loading');
-    btn.textContent = 'Signing in';
-    try {
-      let data;
-      if(DEMO_MODE){
-        data = await demoLogin({ identifier: id, password: pw });
-      } else {
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            identifier: id, identifierType: type, password: pw,
-            termsAccepted: true, acceptedAt: new Date().toISOString(),
-          }),
-        });
-        if(!res.ok){
-          const err = await res.json().catch(() => ({ error: 'Sign-in failed' }));
-          throw new Error(err.error || 'Invalid credentials');
-        }
-        data = await res.json();
+  // ===== PHONE AUTH (Firebase reCAPTCHA + OTP) =====
+  let confirmationResult = null;
+  let recaptchaVerifier = null;
+  let otpSent = false;
+
+  async function doPhoneAuth(){
+    hideLoginError();
+    if(otpSent) return verifyOTP(); // already sent code, now verify
+
+    const phone=document.getElementById('phone-number').value.trim();
+    if(!phone){document.getElementById('phone-number').classList.add('invalid');showLoginError('Phone number required (with country code).');return}
+
+    const btn=document.getElementById('login-cta');
+    btn.classList.add('loading'); btn.textContent='Sending code…';
+    try{
+      const fb=await fbReady();
+      // Create invisible reCAPTCHA if not already created
+      if(!recaptchaVerifier){
+        recaptchaVerifier = new fb.RecaptchaVerifier(fb.auth, 'recaptcha-container', {size:'invisible'});
       }
-      if(data.token) localStorage.setItem('ezp_token', data.token);
-      document.getElementById('login-overlay').style.display = 'none';
-      if(data.subscriptionActive){
-        startIntegrationAutoDetect();
-      } else {
-        document.getElementById('payment-overlay').classList.add('show');
-      }
-    } catch(err){
-      showLoginError(err.message || 'Unable to sign in. Please check your credentials.');
+      confirmationResult = await fb.signInWithPhoneNumber(fb.auth, phone, recaptchaVerifier);
+      otpSent = true;
+      document.getElementById('otp-section').style.display='block';
       btn.classList.remove('loading');
-      btn.textContent = 'Sign In →';
+      btn.textContent='Verify code →';
+      showLoginError(''); // clear
+      document.getElementById('login-error').classList.remove('show');
+    }catch(err){
+      showLoginError(fErr(err));
+      btn.classList.remove('loading'); btn.textContent='Send verification code';
+      // Reset reCAPTCHA on error
+      if(recaptchaVerifier){try{recaptchaVerifier.clear();}catch(e){} recaptchaVerifier=null;}
     }
   }
 
-  async function doSocialLogin(provider){
-    if(!document.getElementById('terms-accept').checked){
-      showLoginError('You must agree to the Terms of Service and Privacy Policy to sign in.');
-      return;
-    }
-    // Real Google OAuth — uses your actual client ID
-    if(provider === 'google'){
-      const clientId = '830406008027-2bc4rml155565po4pebupp2g1u4456ol.apps.googleusercontent.com';
-      const redirectUri = `${window.location.origin}/api/auth/oauth/google/callback`;
-      const scope = [
-        'openid','email','profile',
-        'https://www.googleapis.com/auth/gmail.modify',
-        'https://www.googleapis.com/auth/documents',
-        'https://www.googleapis.com/auth/calendar',
-        'https://www.googleapis.com/auth/drive.file',
-        'https://www.googleapis.com/auth/adwords',
-      ].join(' ');
-      const state = btoa(JSON.stringify({ returnTo: '/ez-pilot.html', t: Date.now() }));
-      const url =
-        'https://accounts.google.com/o/oauth2/v2/auth' +
-        `?client_id=${encodeURIComponent(clientId)}` +
-        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-        `&response_type=code&access_type=offline&prompt=consent` +
-        `&scope=${encodeURIComponent(scope)}&state=${encodeURIComponent(state)}`;
-      window.location.href = url;
-      return;
-    }
-    // Other providers go through backend OAuth flow
-    window.location.href = `/api/auth/oauth/${provider}?returnTo=${encodeURIComponent(window.location.pathname)}`;
-  }
-
-  // Google Sign-In via Google Identity Services
-  // GIS calls this with { credential, select_by, clientId } — credential is a JWT ID token
-  window.handleGoogleCredential = async function(response){
+  async function verifyOTP(){
     hideLoginError();
-    if(!document.getElementById('terms-accept').checked){
-      showLoginError('Please agree to Terms & Privacy first, then click Continue with Google again.');
-      return;
+    const code=document.getElementById('otp-code').value.trim();
+    if(!code||code.length<6){document.getElementById('otp-code').classList.add('invalid');showLoginError('Enter the 6-digit code.');return}
+    const btn=document.getElementById('login-cta');
+    btn.classList.add('loading'); btn.textContent='Verifying…';
+    try{
+      const result=await confirmationResult.confirm(code);
+      const remember=document.getElementById('remember-me')?.checked;
+      if(remember) localStorage.setItem('ezp_remember', result.user.phoneNumber||'');
+      postAuth(result.user);
+    }catch(err){
+      showLoginError(fErr(err));
+      btn.classList.remove('loading'); btn.textContent='Verify code →';
     }
-    try {
-      const res = await fetch('/api/auth/oauth/google/callback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          credential: response.credential,
-          termsAccepted: true,
-          acceptedAt: new Date().toISOString(),
-        }),
-      });
-      if(!res.ok){
-        const err = await res.json().catch(()=>({error:'Google sign-in failed'}));
-        throw new Error(err.error || 'Sign-in failed');
-      }
-      const data = await res.json();
-      if(data.token) localStorage.setItem('ezp_token', data.token);
-      document.getElementById('login-overlay').style.display = 'none';
-      if(data.subscriptionActive){
-        startIntegrationAutoDetect();
-      } else {
-        document.getElementById('payment-overlay').classList.add('show');
-      }
-    } catch(err){
-      showLoginError(err.message || 'Could not complete Google sign-in.');
-    }
-  };
+  }
+
+  // ===== GOOGLE SIGN IN =====
+  async function doGoogleSignIn(){
+    if(!document.getElementById('terms-accept').checked){showLoginError('Agree to Terms & Privacy first.');return}
+    hideLoginError();
+    try{
+      const fb=await fbReady();
+      const remember=document.getElementById('remember-me')?.checked;
+      await fb.setPersistence(fb.auth, remember?fb.browserLocalPersistence:fb.browserSessionPersistence);
+      const cred=await fb.signInWithPopup(fb.auth, fb.googleProvider);
+      if(remember && cred.user.email) localStorage.setItem('ezp_remember', cred.user.email);
+      postAuth(cred.user);
+    }catch(err){showLoginError(fErr(err))}
+  }
+
+  // ===== MICROSOFT SIGN IN =====
+  async function doMicrosoftSignIn(){
+    if(!document.getElementById('terms-accept').checked){showLoginError('Agree to Terms & Privacy first.');return}
+    hideLoginError();
+    try{
+      const fb=await fbReady();
+      const remember=document.getElementById('remember-me')?.checked;
+      await fb.setPersistence(fb.auth, remember?fb.browserLocalPersistence:fb.browserSessionPersistence);
+      const provider = new fb.OAuthProvider('microsoft.com');
+      provider.setCustomParameters({tenant:'common'});
+      const cred=await fb.signInWithPopup(fb.auth, provider);
+      if(remember && cred.user.email) localStorage.setItem('ezp_remember', cred.user.email);
+      postAuth(cred.user);
+    }catch(err){showLoginError(fErr(err))}
+  }
 
   function logout(){
+    fbReady().then(fb=>fb.signOut(fb.auth)).catch(()=>{});
     localStorage.removeItem('ezp_token');
-    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
-    document.getElementById('login-overlay').style.display = 'flex';
+    localStorage.removeItem('ezp_user');
+    localStorage.removeItem('ezp_remember');
+    document.getElementById('login-overlay').style.display='flex';
     stopIntegrationAutoDetect();
   }
 
+  // ===== AUTO-RESTORE SESSION =====
+  // Firebase onAuthStateChanged restores session automatically if persistence was set
+  fbReady().then(fb=>{
+    fb.onAuthStateChanged(fb.auth, user=>{
+      if(user){
+        postAuth(user);
+      }
+      // If no user, login overlay is already visible (default)
+    });
+  });
+  // Pre-fill remembered email
+  (function(){
+    const r=localStorage.getItem('ezp_remember');
+    if(r){const el=document.getElementById('login-id');if(el)el.value=r}
+  })();
+
   // ===== PAYMENT GATE =====
-  let selectedPayPlan = 'pro_annual';
-  const STRIPE_LINKS = {
-    pro_monthly: 'https://buy.stripe.com/8x26oIaGhcY37HS42Rffy06',
-    max_monthly: 'https://buy.stripe.com/4gMeVeaGh3ntbY8bvjffy07',
-    pro_annual:  'https://buy.stripe.com/cNicN67u54rx3rC2YNffy04',
-    max_annual:  'https://buy.stripe.com/dRmfZiaGhgaf0fq1UJffy03',
+  let selectedPayPlan='pro_annual';
+  const STRIPE_LINKS={
+    starter:      'https://buy.stripe.com/00w14o6q1cY3aU48j7ffy08',
+    pro_monthly:  'https://buy.stripe.com/8x26oIaGhcY37HS42Rffy06',
+    max_monthly:  'https://buy.stripe.com/4gMeVeaGh3ntbY8bvjffy07',
+    pro_annual:   'https://buy.stripe.com/cNicN67u54rx3rC2YNffy04',
+    max_annual:   'https://buy.stripe.com/dRmfZiaGhgaf0fq1UJffy03',
   };
   function selectPayPlan(el){
-    document.querySelectorAll('.pay-plan').forEach(p => p.classList.remove('selected'));
+    document.querySelectorAll('.pay-plan').forEach(p=>p.classList.remove('selected'));
     el.classList.add('selected');
-    selectedPayPlan = el.dataset.plan;
+    selectedPayPlan=el.dataset.plan;
   }
   function startCheckout(){
-    const btn = document.getElementById('pay-cta');
-    btn.classList.add('loading');
-    btn.textContent = 'Opening Stripe';
-    // Persist plan so we can reconcile after Stripe redirects back
-    localStorage.setItem('ezp_pending_plan', selectedPayPlan);
-    localStorage.setItem('ezp_checkout_at', Date.now().toString());
-    window.location.href = STRIPE_LINKS[selectedPayPlan];
+    const btn=document.getElementById('pay-cta');
+    btn.classList.add('loading'); btn.textContent='Opening Stripe…';
+    localStorage.setItem('ezp_pending_plan',selectedPayPlan);
+    window.location.href=STRIPE_LINKS[selectedPayPlan];
   }
-  // Check on load: if user returned from Stripe with ?checkout=success, unlock the app
   (function checkStripeReturn(){
-    const params = new URLSearchParams(window.location.search);
-    if(params.get('checkout') === 'success'){
-      const plan = localStorage.getItem('ezp_pending_plan');
-      if(plan) localStorage.setItem('ezp_active_plan', plan);
+    const p=new URLSearchParams(window.location.search);
+    if(p.get('checkout')==='success'){
+      const plan=localStorage.getItem('ezp_pending_plan');
+      if(plan) localStorage.setItem('ezp_active_plan',plan);
       localStorage.removeItem('ezp_pending_plan');
-      // Clean the URL
-      window.history.replaceState({}, '', window.location.pathname);
+      window.history.replaceState({},'',window.location.pathname);
     }
   })();
 
-  // ===== PRICING =====
-  let isAnnual = true;
+  // ===== PRICING TOGGLE =====
+  let isAnnual=true;
   function toggleBilling(){
-    isAnnual = !isAnnual;
-    document.getElementById('toggle').classList.toggle('annual', isAnnual);
-    document.getElementById('lbl-monthly').style.color = isAnnual ? 'var(--muted)' : 'var(--ink)';
-    document.getElementById('lbl-annual').style.color = isAnnual ? 'var(--ink)' : 'var(--muted)';
+    isAnnual=!isAnnual;
+    document.getElementById('toggle').classList.toggle('annual',isAnnual);
+    document.getElementById('lbl-monthly').style.fontWeight=isAnnual?'500':'700';
+    document.getElementById('lbl-monthly').style.color=isAnnual?'var(--muted)':'var(--ink)';
+    document.getElementById('lbl-annual').style.fontWeight=isAnnual?'700':'500';
+    document.getElementById('lbl-annual').style.color=isAnnual?'var(--ink)':'var(--muted)';
     if(isAnnual){
-      // Annual: 1-month free trial
-      document.getElementById('pro-strike').style.display = 'inline';
-      document.getElementById('pro-strike').textContent = '$19';
-      document.getElementById('pro-price').textContent = '$0';
-      document.getElementById('pro-per').textContent = '/first month';
-      document.getElementById('pro-note').innerHTML = 'Then <strong>$19/mo</strong> billed annually ($228/yr) · 12-month commitment, no mid-term cancel';
-      document.querySelector('#pricing .plan.featured .save-tag').innerHTML = '🎉 1-MONTH FREE TRIAL';
-      document.querySelector('#pricing .plan.featured .save-tag').style.display = 'block';
-      document.querySelector('#pricing .plan.featured .trial-callout').style.display = 'block';
-      document.getElementById('max-price').textContent = '$90';
-      document.getElementById('max-note').innerHTML = 'Billed annually ($1,080/yr) · save $120/yr · 12-month commitment';
-    } else {
-      // Monthly: no free trial
-      document.getElementById('pro-strike').style.display = 'none';
-      document.getElementById('pro-price').textContent = '$23';
-      document.getElementById('pro-per').textContent = '/month';
-      document.getElementById('pro-note').innerHTML = 'Billed monthly · cancel anytime · <strong>no free trial on monthly</strong>';
-      document.querySelector('#pricing .plan.featured .save-tag').style.display = 'none';
-      document.querySelector('#pricing .plan.featured .trial-callout').style.display = 'none';
-      document.getElementById('max-price').textContent = '$100';
-      document.getElementById('max-note').innerHTML = 'Billed monthly · cancel anytime';
+      document.getElementById('pro-price').textContent='$0';
+      document.getElementById('strike-price').style.display='inline';
+      document.getElementById('billing-note').innerHTML='Then <strong>$19/mo</strong> annually ($228/yr)';
+      document.getElementById('save-tag').style.display='block';
+      document.getElementById('year1-banner').style.display='block';
+      document.getElementById('max-price').textContent='$90';
+      document.getElementById('max-note').innerHTML='$1,080/yr annually';
+    }else{
+      document.getElementById('pro-price').textContent='$23';
+      document.getElementById('strike-price').style.display='none';
+      document.getElementById('billing-note').textContent='Monthly · cancel anytime';
+      document.getElementById('save-tag').style.display='none';
+      document.getElementById('year1-banner').style.display='none';
+      document.getElementById('max-price').textContent='$100';
+      document.getElementById('max-note').textContent='Monthly · cancel anytime';
     }
   }
 
-  // ===== TASKS =====
-  function updateTaskProgress(){
-    const tasks = document.querySelectorAll('#tasks .task');
-    if(!tasks.length) return;
-    const done = document.querySelectorAll('#tasks .task.done').length;
-    const pct = Math.round((done / tasks.length) * 100);
-    document.getElementById('task-fill').style.width = pct + '%';
-    document.getElementById('task-pct').textContent = pct + '%';
+  // ===== PROFILE =====
+  function loadProfile(){
+    const u=JSON.parse(localStorage.getItem('ezp_user')||'{}');
+    if(!u.uid) return;
+    const p=gP(u.uid);
+    const dn=p.displayName||u.fullName||u.identifier||'';
+    document.getElementById('profile-display-name').textContent=dn;
+    document.getElementById('profile-email').textContent=u.identifier||'';
+    document.getElementById('profile-name-input').value=dn;
+    document.getElementById('profile-id-input').value=u.identifier||'';
+    document.getElementById('profile-bio-input').value=p.bio||'';
+    document.getElementById('profile-avatar').textContent=(dn||'?').charAt(0).toUpperCase();
+    const pill=document.getElementById('profile-plan-pill');
+    if(p.plan==='admin'){pill.textContent='⚡ ADMIN';pill.style.background='#0a0a0a';pill.style.color='#FFEB3B'}
+    else{pill.textContent=(p.plan||'FREE').toUpperCase();pill.style.background='var(--yellow-soft)';pill.style.color='#5a4a00'}
   }
-  document.querySelectorAll('.task .check').forEach(c => {
-    c.addEventListener('click', () => {
-      const t = c.closest('.task');
-      t.classList.toggle('done');
-      c.textContent = t.classList.contains('done') ? '✓' : '';
-      updateTaskProgress();
+  function saveProfile(){
+    const u=JSON.parse(localStorage.getItem('ezp_user')||'{}');
+    if(!u.uid) return;
+    const p=gP(u.uid);
+    const newName=document.getElementById('profile-name-input').value.trim();
+    if(!newName){showProfileStatus('Name required.',false);return}
+    p.displayName=newName;p.fullName=newName;p.bio=document.getElementById('profile-bio-input').value.trim();
+    sP(u.uid,p);
+    u.fullName=newName;localStorage.setItem('ezp_user',JSON.stringify(u));
+    document.getElementById('profile-display-name').textContent=newName;
+    document.getElementById('profile-avatar').textContent=newName.charAt(0).toUpperCase();
+    // Also update Firebase displayName
+    fbReady().then(fb=>{if(fb.auth.currentUser)fb.updateProfile(fb.auth.currentUser,{displayName:newName}).catch(()=>{})});
+    showProfileStatus('✓ Saved.',true);
+  }
+  function showProfileStatus(m,ok){const el=document.getElementById('profile-status');el.textContent=m;el.style.color=ok?'#10b981':'#ef4444';el.style.display='block';setTimeout(()=>{el.style.display='none'},2500)}
+  function changePassword(){
+    const cur=document.getElementById('pw-current').value;
+    const np=document.getElementById('pw-new').value;
+    if(!cur||!np){showPwStatus('Both fields required.',false);return}
+    if(np.length<8){showPwStatus('8+ chars required.',false);return}
+    fbReady().then(async fb=>{
+      const user=fb.auth.currentUser;
+      if(!user||!user.email){showPwStatus('Only email accounts can change password.',false);return}
+      try{
+        const cred=fb.EmailAuthProvider.credential(user.email,cur);
+        await fb.reauthenticateWithCredential(user,cred);
+        await fb.updatePassword(user,np);
+        document.getElementById('pw-current').value='';document.getElementById('pw-new').value='';
+        showPwStatus('✓ Password updated.',true);
+      }catch(err){showPwStatus(fErr(err),false)}
     });
+  }
+  function showPwStatus(m,ok){const el=document.getElementById('pw-status');el.textContent=m;el.style.color=ok?'#10b981':'#ef4444';el.style.display='block';setTimeout(()=>{el.style.display='none'},2500)}
+  document.querySelectorAll('.nav-item[data-screen="profile"]').forEach(n=>{n.addEventListener('click',()=>setTimeout(loadProfile,50))});
+
+  // ===== TASK TOGGLE =====
+  document.querySelectorAll('.task .check').forEach(c=>{
+    c.addEventListener('click',()=>{const t=c.closest('.task');t.classList.toggle('done');c.textContent=t.classList.contains('done')?'✓':''});
   });
-  updateTaskProgress();
+
+  // ===== CHAT =====
+  const chatInput=document.getElementById('chat-input');
+  const msgsEl=document.getElementById('msgs');
+  const botAvatar='<div class="avatar bot"><svg viewBox="0 0 1024 1024" style="width:24px;height:24px"><use href="#ezlogo"/></svg></div>';
+  function sendMsg(){
+    const v=chatInput.value.trim();if(!v)return;
+    // Hide empty state
+    const empty=document.getElementById('chat-empty');if(empty)empty.style.display='none';
+    msgsEl.insertAdjacentHTML('beforeend',`<div class="msg user"><div class="avatar user">U</div><div class="bubble">${v.replace(/</g,'&lt;')}</div></div>`);
+    chatInput.value='';msgsEl.scrollTop=msgsEl.scrollHeight;
+    setTimeout(()=>{
+      msgsEl.insertAdjacentHTML('beforeend',`<div class="msg">${botAvatar}<div class="bubble"><span class="tool-chip">AI generated</span><br>I'll handle this for you and add follow-ups to your tasks.</div></div>`);
+      msgsEl.scrollTop=msgsEl.scrollHeight;
+    },600);
+  }
+  chatInput?.addEventListener('keydown',e=>{if(e.key==='Enter')sendMsg()});
+  document.querySelector('.send-btn')?.addEventListener('click',sendMsg);
+
+  // Context pills
+  document.querySelectorAll('.context-pill').forEach(p=>{
+    p.addEventListener('click',()=>{p.classList.toggle('active')});
+  });
 
   // ===== INTEGRATIONS =====
-  function setIntegrationState(btn, state){
-    btn.dataset.state = state;
+  function setIntegrationState(btn,state){
+    btn.dataset.state=state;
     btn.classList.remove('itb-disconnected','itb-connected','itb-live');
-    if(state === 'disconnected'){ btn.classList.add('itb-disconnected'); btn.textContent = 'CONNECT'; }
-    else if(state === 'connected'){ btn.classList.add('itb-connected'); btn.textContent = 'CONNECTED'; }
-    else { btn.classList.add('itb-live'); btn.textContent = 'LIVE'; }
-    updateConnectAllBtn(); updateLiveCount();
+    if(state==='disconnected'){btn.classList.add('itb-disconnected');btn.textContent='CONNECT'}
+    else if(state==='connected'){btn.classList.add('itb-connected');btn.textContent='CONNECTED'}
+    else{btn.classList.add('itb-live');btn.textContent='LIVE'}
+    updateConnectAllBtn();
   }
-  document.querySelectorAll('.int-toggle-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      setIntegrationState(btn, btn.dataset.state === 'disconnected' ? 'live' : 'disconnected');
+  document.querySelectorAll('.int-toggle-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      setIntegrationState(btn, btn.dataset.state==='disconnected'?'live':'disconnected');
     });
   });
   function updateConnectAllBtn(){
-    const all = document.querySelectorAll('.int-toggle-btn');
-    const allConnected = Array.from(all).every(b => b.dataset.state !== 'disconnected');
-    const btn = document.getElementById('connectAllBtn');
-    if(allConnected){ btn.innerHTML = '🔌 Disconnect All'; btn.classList.add('disconnect-mode'); }
-    else { btn.innerHTML = '⚡ Connect All'; btn.classList.remove('disconnect-mode'); }
+    const allBtns=document.querySelectorAll('.int-toggle-btn');
+    if(!allBtns.length)return;
+    const allConn=Array.from(allBtns).every(b=>b.dataset.state!=='disconnected');
+    const btn=document.querySelector('.connect-all');
+    if(!btn)return;
+    if(allConn){btn.innerHTML='🔌 Disconnect All';btn.classList.add('disconnect-mode')}
+    else{btn.innerHTML='⚡ Connect All';btn.classList.remove('disconnect-mode')}
   }
-  function updateLiveCount(){
-    const live = document.querySelectorAll('.int-toggle-btn[data-state="live"]').length;
-    const con = document.querySelectorAll('.int-toggle-btn[data-state="connected"]').length;
-    document.getElementById('liveCount').textContent = `${live + con} services connected`;
+  function connectAll(){
+    const allBtns=document.querySelectorAll('.int-toggle-btn');
+    const allConn=Array.from(allBtns).every(b=>b.dataset.state!=='disconnected');
+    allBtns.forEach(b=>setIntegrationState(b, allConn?'disconnected':'live'));
   }
-  function toggleConnectAll(){
-    const all = document.querySelectorAll('.int-toggle-btn');
-    const allConnected = Array.from(all).every(b => b.dataset.state !== 'disconnected');
-    if(allConnected) all.forEach(b => setIntegrationState(b, 'disconnected'));
-    else all.forEach(b => setIntegrationState(b, 'live'));
-  }
-  updateConnectAllBtn(); updateLiveCount();
+  updateConnectAllBtn();
 
-  // ===== CHAT (real AI models via /api/chat backend proxy) =====
-  const conversation = [];
-  const activeContext = new Set();
-  const pendingAttachments = [];
-  let uploadsToday = 0;
-  const UPLOAD_LIMIT = 15; // Pro; backend enforces real limit
-
-  // Context pull pills
-  document.querySelectorAll('.context-pill').forEach(p => {
-    p.addEventListener('click', () => {
-      const c = p.dataset.context;
-      if(activeContext.has(c)){ activeContext.delete(c); p.classList.remove('active'); }
-      else { activeContext.add(c); p.classList.add('active'); }
-    });
-  });
-
-  // File upload (any type, Pro 15/24h, Max unlimited)
-  async function handleFileUpload(e){
-    const file = e.target.files[0];
-    if(!file) return;
-    if(uploadsToday >= UPLOAD_LIMIT){
-      alert(`Pro plan limit: ${UPLOAD_LIMIT} files / 24h reached. Upgrade to Max for unlimited uploads.`);
-      return;
-    }
-    pendingAttachments.push({ name: file.name, size: file.size, type: file.type, file });
-    uploadsToday++;
-    document.getElementById('upload-counter').textContent = `📎 ${uploadsToday}/${UPLOAD_LIMIT} files today`;
-    // Show chip in composer
-    const chipBar = document.createElement('div');
-    chipBar.style.cssText = 'padding:8px 4px 0;display:flex;gap:6px;flex-wrap:wrap';
-    chipBar.innerHTML = `<span class="attach-chip">📎 ${file.name} (${Math.round(file.size/1024)} KB)</span>`;
-    document.querySelector('#chat .composer').insertBefore(chipBar, document.querySelector('#chat .composer-inner'));
-    // In production: upload via apiFetch('/api/upload', { method:'POST', body: formData })
-    e.target.value = '';
-  }
-
-  async function callRealModel(model, userMessage){
-    conversation.push({ role: 'user', content: userMessage });
-    try {
-      // In production: use apiFetch from firebase-client.js so Firebase ID token is attached
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model,
-          messages: conversation,
-          context: { pull: Array.from(activeContext) },
-          attachments: pendingAttachments.map(a => ({ name: a.name, type: a.type })),
-        }),
-      });
-      if(!res.ok) throw new Error(`API ${res.status}`);
-      const data = await res.json();
-      const text = data.text || '(empty response)';
-      conversation.push({ role: 'assistant', content: text });
-      pendingAttachments.length = 0;
-      return text;
-    } catch(err){
-      const contextNote = activeContext.size ? ` · pulling ${Array.from(activeContext).join(', ')}` : '';
-      const fallback = `[${model}${contextNote} · demo mode] Deploy /api/chat on your backend to enable real AI responses. The backend will hold your API keys and forward to the official model endpoint.`;
-      conversation.push({ role: 'assistant', content: fallback });
-      return fallback;
-    }
-  }
-
-  const input = document.getElementById('chat-input');
-  const msgs = document.getElementById('msgs');
-  const botAvatar = '<div class="avatar bot"><svg viewBox="0 0 1024 1024" style="width:24px;height:24px"><use href="#ezlogo"/></svg></div>';
-
-  async function sendMsg(){
-    const v = input.value.trim();
-    if(!v) return;
-    const attachChips = pendingAttachments.map(a => `<span class="attach-chip">📎 ${a.name}</span>`).join(' ');
-    const ctxChips = Array.from(activeContext).map(c => `<span class="tool-chip">🔍 pulling ${c}</span>`).join(' ');
-    const makeChip = activeContext.size ? '<span class="make-chip">⚙️ make.com workflow</span>' : '';
-    msgs.insertAdjacentHTML('beforeend', `<div class="msg user"><div class="avatar user">U</div><div class="bubble">${attachChips}${attachChips?'<br>':''}${v.replace(/</g,'&lt;')}</div></div>`);
-    input.value = '';
-    // Clear attach chip bar visual
-    document.querySelectorAll('#chat .composer > div:not(.composer-inner):not(.context-row)').forEach(d => d.remove());
-    msgs.scrollTop = msgs.scrollHeight;
-    msgs.insertAdjacentHTML('beforeend', `<div class="msg typing" id="typing-ind">${botAvatar}<div class="bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`);
-    msgs.scrollTop = msgs.scrollHeight;
-
-    const model = document.getElementById('model-select').value;
-    const reply = await callRealModel(model, v);
-    document.getElementById('typing-ind')?.remove();
-    msgs.insertAdjacentHTML('beforeend', `<div class="msg">${botAvatar}<div class="bubble">${ctxChips}${makeChip}${(ctxChips||makeChip)?'<br>':''}${reply.replace(/</g,'&lt;')}</div></div>`);
-    msgs.scrollTop = msgs.scrollHeight;
-  }
-  input?.addEventListener('keydown', e => { if(e.key === 'Enter') sendMsg(); });
-  document.querySelector('.send-btn')?.addEventListener('click', sendMsg);
-
-  // ===== AUTO-DETECT INTEGRATIONS =====
-  // Polls /api/integrations/verify for each connected service every 5 min.
-  // Backend pings the actual provider API (gmail.googleapis.com, github.com, etc)
-  // to confirm the OAuth token is live AND the account is still valid.
-  let autoDetectTimer = null;
-  async function checkIntegration(card){
-    const btn = card.querySelector('.int-toggle-btn');
-    const service = btn?.dataset.service;
-    const statusEl = card.querySelector('.int-status');
-    if(!service || btn.dataset.state === 'disconnected') return;
-    try {
-      const res = await fetch('/api/integrations/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ service }),
-      });
-      const data = await res.json();
-      if(statusEl){
-        statusEl.classList.toggle('ok', data.valid);
-        statusEl.classList.toggle('bad', !data.valid);
-        statusEl.textContent = data.valid ? 'ACTIVE' : 'EXPIRED';
-        statusEl.title = data.valid ? 'Token valid, account live' : `Re-auth needed: ${data.reason}`;
-      }
-    } catch(e){ /* offline / backend not deployed — keep existing state */ }
-  }
+  // Auto-detect integration health
+  let autoDetectTimer=null;
   function startIntegrationAutoDetect(){
-    const run = () => {
-      document.querySelectorAll('.int-card').forEach(checkIntegration);
-    };
-    run();
-    autoDetectTimer = setInterval(run, 5 * 60 * 1000); // every 5 min
+    if(autoDetectTimer)return;
+    // Poll every 5 min
+    autoDetectTimer=setInterval(()=>{
+      document.querySelectorAll('.int-toggle-btn[data-service]').forEach(btn=>{
+        const svc=btn.dataset.service;
+        fetch('/api/integrations/verify',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(localStorage.getItem('ezp_token')||'')},body:JSON.stringify({service:svc})})
+          .then(r=>r.json()).then(d=>{
+            if(d.valid) setIntegrationState(btn,'live');
+            else if(d.reason==='expired') btn.closest('.int-card')?.querySelector('.int-status')?.classList.replace('ok','expired');
+          }).catch(()=>{});
+      });
+    },300000);
   }
   function stopIntegrationAutoDetect(){
     if(autoDetectTimer) clearInterval(autoDetectTimer);
-    autoDetectTimer = null;
+    autoDetectTimer=null;
   }
 </script>
 </body>
