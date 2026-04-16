@@ -244,19 +244,252 @@ This is NOT a chatbot. The AI actively plans and executes multi-step workflows.
 
 ---
 
-## Deploy
+## Deploy — Full Step-by-Step Guide
+
+### Step 1: Firebase Setup
+
+```bash
+# Install Firebase CLI
+npm install -g firebase-tools
+firebase login
+```
+
+1. Go to [Firebase Console](https://console.firebase.google.com/) → Create project "ez-pilot"
+2. **Authentication → Sign-in method** → Enable:
+   - Email/Password
+   - Phone (set allowed regions → allow US at minimum)
+   - Google (paste your OAuth client ID: `830406008027-...`)
+   - Microsoft (App ID: `29bfc578-657a-4905-bfb4-953c470c532f`, Secret: `2543a53d-...`)
+3. **Authentication → Settings → Authorized domains** → Add `ez-pilot.com` and `www.ez-pilot.com`
+4. **Firestore Database** → Create database (production mode) → Location: `us-central1`
+5. **Storage** → Create bucket → Default rules
+6. **Project Settings → General → Your apps** → Click "Web" → Register app → Copy config:
+   ```js
+   apiKey: "AIza...",
+   authDomain: "ez-pilot.firebaseapp.com",
+   projectId: "ez-pilot",
+   storageBucket: "ez-pilot.appspot.com",
+   messagingSenderId: "830406008027",
+   appId: "1:830406008027:web:..."
+   ```
+7. Paste `apiKey` and `appId` into `ez-pilot.html` and `ez-pilot-mobile.html` where it says `REPLACE_WITH_YOUR_FIREBASE_API_KEY` and `REPLACE_WITH_YOUR_FIREBASE_APP_ID`
+8. **Project Settings → Service accounts** → Generate new private key → Download JSON → You'll need `client_email` and `private_key` for the backend `.env`
+
+Deploy Firestore + Storage rules:
+```bash
+firebase deploy --only firestore:rules,storage:rules
+```
+
+### Step 2: Get AI Provider API Keys
+
+You need at least ONE key to start. Get more as you scale:
+
+| Provider | Get key at | Env var |
+|---|---|---|
+| Anthropic (Claude) | https://console.anthropic.com | `ANTHROPIC_API_KEY` |
+| OpenAI (GPT-5, GPT-4, o1) | https://platform.openai.com | `OPENAI_API_KEY` |
+| Google (Gemini) | https://aistudio.google.com | `GOOGLE_API_KEY` |
+| xAI (Grok) | https://console.x.ai | `XAI_API_KEY` |
+| DeepSeek | https://platform.deepseek.com | `DEEPSEEK_API_KEY` |
+| Mistral | https://console.mistral.ai | `MISTRAL_API_KEY` |
+| Perplexity | https://perplexity.ai | `PERPLEXITY_API_KEY` |
+
+Minimum to start: just `ANTHROPIC_API_KEY` (Claude Sonnet is the fallback model for everything).
+
+### Step 3: Database (PostgreSQL)
+
+Choose one (all have free tiers):
+- **Supabase** → https://supabase.com → New project → Copy `DATABASE_URL` from Settings → Database
+- **Neon** → https://neon.tech → New project → Copy connection string
+- **Railway** → https://railway.app → Add PostgreSQL → Copy `DATABASE_URL`
+
+### Step 4: Redis
+
+Choose one:
+- **Upstash** → https://upstash.com → Create Redis database → Copy `REDIS_URL`
+- **Railway** → Add Redis → Copy URL
+
+### Step 5: Backend Deploy
+
+#### Option A: Render.com (recommended — free tier available)
+
+1. Push your `backend/` folder to a GitHub repo
+2. Go to https://render.com → New Web Service → Connect repo
+3. Settings:
+   - Build command: `npm install && npm run build && npx prisma generate`
+   - Start command: `npm start`
+   - Environment: `Node`
+4. Add ALL env vars from `.env.example` in the Environment tab
+5. Deploy → Get URL like `https://ez-pilot-api.onrender.com`
+
+#### Option B: Railway.app
+
+1. Push to GitHub
+2. Railway → New project → Deploy from GitHub
+3. Add env vars
+4. Railway auto-detects Node.js and deploys
+5. Get URL like `https://ez-pilot-api.up.railway.app`
+
+#### Option C: Docker (any VPS — DigitalOcean, AWS, etc.)
 
 ```bash
 cd backend
-cp .env.example .env   # fill in all keys
-npm install
-npm run dev            # development
-# or
+cp .env.example .env
+# Fill in ALL keys in .env (see .env.example for full list)
+
+# Build and run
 docker build -t ez-pilot-api .
-docker run -p 5000:5000 --env-file .env ez-pilot-api
+docker run -d \
+  --name ez-pilot-api \
+  --env-file .env \
+  -p 5000:5000 \
+  --restart unless-stopped \
+  ez-pilot-api
 ```
 
-Frontend: deploy all HTML + `logos/` folder to Vercel/Netlify/Cloudflare Pages.
+#### Option D: Local development
+
+```bash
+cd backend
+cp .env.example .env
+# Fill in keys
+
+npm install
+npx prisma generate
+npx prisma migrate deploy
+npm run dev
+# Server runs on http://localhost:5000
+```
+
+### Step 6: Stripe Setup
+
+1. Go to https://dashboard.stripe.com → Developers → API keys
+2. Copy **Secret key** → paste as `STRIPE_SECRET_KEY` in backend `.env`
+3. Developers → Webhooks → Add endpoint:
+   - URL: `https://your-backend-url.com/api/webhooks/stripe`
+   - Events: `checkout.session.completed`, `customer.subscription.deleted`, `invoice.payment_succeeded`, `invoice.payment_failed`
+4. Copy **Webhook signing secret** → paste as `STRIPE_WEBHOOK_SECRET`
+
+Your payment links are already configured:
+- Starter: `https://buy.stripe.com/00w14o6q1cY3aU48j7ffy08`
+- Pro Monthly: `https://buy.stripe.com/8x26oIaGhcY37HS42Rffy06`
+- Pro Annual: `https://buy.stripe.com/cNicN67u54rx3rC2YNffy04`
+- Max Monthly: `https://buy.stripe.com/4gMeVeaGh3ntbY8bvjffy07`
+- Max Annual: `https://buy.stripe.com/dRmfZiaGhgaf0fq1UJffy03`
+
+### Step 7: Frontend Deploy
+
+#### Vercel (recommended)
+
+```bash
+# From the root (not backend/)
+npx vercel
+# Follow prompts → deployed to https://ez-pilot.vercel.app
+```
+
+Or connect GitHub repo to Vercel dashboard → auto-deploys on push.
+
+#### Netlify
+
+```bash
+npx netlify deploy --prod --dir=.
+```
+
+Or drag-and-drop the folder in Netlify dashboard.
+
+#### Cloudflare Pages
+
+```bash
+npx wrangler pages deploy .
+```
+
+**Important:** Upload the entire root folder INCLUDING:
+- All `.html` files
+- `logos/` folder (29 brand icons)
+- `*.pdf` files (terms + privacy)
+- `_headers` file (if using Netlify/CF Pages)
+
+### Step 8: DNS + SSL
+
+Add these DNS records at your domain registrar:
+
+```
+Type    Name    Value
+A       @       <frontend-host-IP>   (or CNAME to vercel/netlify)
+CNAME   www     ez-pilot.com
+CNAME   api     <backend-host>       (e.g. ez-pilot-api.onrender.com)
+```
+
+SSL is auto-provisioned on Vercel, Netlify, Render, Railway, and Cloudflare. No manual setup needed.
+
+### Step 9: Connect Frontend → Backend
+
+In `ez-pilot.html`, the chat/task endpoints call `/api/task`. If your backend is on a different domain (e.g. `api.ez-pilot.com`), update the fetch URLs:
+
+```js
+// In the sendMsg() function, change:
+fetch('/api/task', ...)
+// to:
+fetch('https://api.ez-pilot.com/api/task', ...)
+```
+
+Or set up a reverse proxy in `vercel.json`:
+```json
+{
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://api.ez-pilot.com/api/:path*" }
+  ]
+}
+```
+
+### Step 10: Verify Everything Works
+
+```bash
+# Health check
+curl https://api.ez-pilot.com/api/health
+# Should return: {"status":"ok","ts":...,"version":"2.0.0"}
+
+# Test sign up (from browser)
+# 1. Open https://ez-pilot.com
+# 2. Click "Try free →"
+# 3. Sign up with email + password
+# 4. Should see payment gate
+# 5. Pick a plan → redirects to Stripe
+
+# Test admin access
+# Sign up with kateljj68@gmail.com → should skip payment gate entirely
+```
+
+### Env Vars Checklist (backend .env)
+
+Copy from `.env.example` and fill in:
+
+```
+# REQUIRED (won't start without these)
+JWT_SECRET=<64+ random chars>
+COOKIE_SECRET=<64+ random chars>
+DATABASE_URL=postgresql://...
+FIREBASE_PROJECT_ID=ez-pilot
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-...@ez-pilot.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n..."
+FIREBASE_STORAGE_BUCKET=ez-pilot.appspot.com
+
+# REQUIRED (at least one AI key — Claude recommended)
+ANTHROPIC_API_KEY=sk-ant-...
+
+# RECOMMENDED
+REDIS_URL=redis://...
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# OPTIONAL (add as you enable more models)
+OPENAI_API_KEY=sk-...
+GOOGLE_API_KEY=...
+XAI_API_KEY=xai-...
+DEEPSEEK_API_KEY=sk-...
+MISTRAL_API_KEY=...
+PERPLEXITY_API_KEY=pplx-...
+```
 
 ---
 
