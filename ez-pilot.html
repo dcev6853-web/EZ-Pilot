@@ -35,7 +35,7 @@
 
 <!-- Firebase Authentication (modular SDK v10, loaded as ES modules) -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
   import {
     getAuth, setPersistence,
     browserLocalPersistence, browserSessionPersistence,
@@ -44,17 +44,18 @@
     signOut, onAuthStateChanged, updateProfile, updatePassword,
     EmailAuthProvider, reauthenticateWithCredential, sendPasswordResetEmail,
     RecaptchaVerifier, signInWithPhoneNumber
-  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+  } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
   // ⚠️ REPLACE WITH YOUR ACTUAL FIREBASE PROJECT CONFIG
   // From Firebase Console → Project Settings → General → Your apps → SDK setup
   const firebaseConfig = {
-    apiKey: "REPLACE_WITH_YOUR_FIREBASE_API_KEY",
-    authDomain: "ez-pilot.firebaseapp.com",
-    projectId: "ez-pilot",
-    storageBucket: "ez-pilot.appspot.com",
-    messagingSenderId: "830406008027",
-    appId: "REPLACE_WITH_YOUR_FIREBASE_APP_ID"
+    apiKey: "AIzaSyASBcIGxmL4dekOnLkiItU7MJeQ3Vu1MY8",
+    authDomain: "ez-pilot-c321c.firebaseapp.com",
+    projectId: "ez-pilot-c321c",
+    storageBucket: "ez-pilot-c321c.firebasestorage.app",
+    messagingSenderId: "858556534263",
+    appId: "1:858556534263:web:b7bd6fa9f7a58e19dbf2f2",
+    measurementId: "G-TW32H95PRD"
   };
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
@@ -731,28 +732,56 @@
       <section class="screen active" id="home">
         <div class="home-hero">
           <svg class="home-logo"><use href="#ezlogo"/></svg>
-          <div class="home-h1">What are you working on?</div>
-          <div class="home-sub">Your autonomous AI pilot is ready to act</div>
+          <div class="home-h1">You're all set. Start now.</div>
+          <div class="home-sub">No setup needed — just tell me what to do</div>
           <div class="home-input-wrap">
             <div class="home-input" onclick="goTo('chat')">
               <div class="plus">+</div>
-              <input type="text" placeholder="Ask anything or command me to do anything…" readonly>
+              <input type="text" placeholder="Try: Reply to my unread emails…" readonly>
               <div class="mic">🎤</div>
             </div>
             <div class="quick-prompts">
-              <button class="quick-prompt" onclick="goTo('chat')">📝 Write essay in Google Docs</button>
-              <button class="quick-prompt" onclick="goTo('chat')">✈️ Book a flight to NYC</button>
-              <button class="quick-prompt" onclick="goTo('chat')">💻 Review my GitHub PR</button>
-              <button class="quick-prompt" onclick="goTo('ads')">📢 Launch TikTok ads</button>
-              <button class="quick-prompt" onclick="goTo('budget')">💰 Analyze my budget</button>
+              <button class="quick-prompt" onclick="goTo('chat')">💬 Reply to my unread messages</button>
+              <button class="quick-prompt" onclick="goTo('chat')">📧 Draft a follow-up email</button>
+              <button class="quick-prompt" onclick="goTo('chat')">📋 Show me my tasks</button>
+              <button class="quick-prompt" onclick="goTo('chat')">💰 How can I save money this month?</button>
+              <button class="quick-prompt" onclick="goTo('chat')">📢 Launch an ad campaign</button>
             </div>
           </div>
         </div>
+
+        <!-- Zero-setup status panel -->
+        <div style="max-width:680px;margin:28px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite"></div>
+              <span style="font-size:13px;font-weight:700">Automation</span>
+              <span id="automation-status" style="margin-left:auto;font-size:11px;font-weight:700;color:var(--green)">ON</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.5">
+              AI reads incoming messages and drafts replies. You confirm before sending.
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;font-size:12px;font-weight:600">
+              <input type="checkbox" id="automation-toggle" checked onchange="toggleAutomation()" style="accent-color:var(--yellow-deep);width:16px;height:16px">
+              Auto-reply enabled
+            </label>
+          </div>
+          <div style="background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:10px">Connected</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6">
+              ✅ Email (via Google sign-in)<br>
+              ✅ Calendar<br>
+              ✅ Google Docs<br>
+              <a href="javascript:goTo('integrations')" style="color:var(--yellow-deep);font-weight:700;font-size:11px">+ Connect WhatsApp, Telegram →</a>
+            </div>
+          </div>
+        </div>
+
         <div class="home-stats">
-          <div class="stat-card"><div class="lbl">Tasks Today</div><div class="val">12</div><div class="delta up">↑ 4 auto-detected</div></div>
-          <div class="stat-card"><div class="lbl">Budget</div><div class="val">$2,211</div><div class="delta up">↑ $412 mo</div></div>
-          <div class="stat-card"><div class="lbl">Ad Spend (7d)</div><div class="val">$1,247</div><div class="delta down">↓ 8%</div></div>
-          <div class="stat-card"><div class="lbl">ROAS</div><div class="val">4.2×</div><div class="delta up">↑ 0.4×</div></div>
+          <div class="stat-card"><div class="lbl">Drafts Ready</div><div class="val" id="home-drafts">0</div><div class="delta">awaiting review</div></div>
+          <div class="stat-card"><div class="lbl">Tasks</div><div class="val" id="home-tasks">0</div><div class="delta">auto-detected</div></div>
+          <div class="stat-card"><div class="lbl">Replies Sent</div><div class="val" id="home-replies">0</div><div class="delta">today</div></div>
+          <div class="stat-card"><div class="lbl">Time Saved</div><div class="val" id="home-time">0m</div><div class="delta">this week</div></div>
         </div>
       </section>
 
@@ -778,9 +807,15 @@
         </div>
         <div class="chat-msgs" id="msgs">
           <div class="chat-empty" id="chat-empty">
-            <svg viewBox="0 0 1024 1024" style="width:72px;height:72px;margin-bottom:16px;opacity:.5"><use href="#ezlogo"/></svg>
-            <h3>How can I help you today?</h3>
-            <p>Ask anything or tell me what to do. I can pull from your budget, tasks & ads when you need.</p>
+            <svg viewBox="0 0 1024 1024" style="width:60px;height:60px;margin-bottom:14px;opacity:.5"><use href="#ezlogo"/></svg>
+            <h3>Ready to work</h3>
+            <p style="margin-bottom:16px">No setup needed. Try one of these:</p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:480px">
+              <button onclick="quickChat('Reply to my unread emails')" style="background:var(--yellow-soft);border:1px solid var(--yellow-deep);padding:8px 14px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer">📧 Reply to emails</button>
+              <button onclick="quickChat('Follow up with anyone I haven\\'t replied to in 24 hours')" style="background:var(--yellow-soft);border:1px solid var(--yellow-deep);padding:8px 14px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer">🔄 Auto follow-up</button>
+              <button onclick="quickChat('Create a task: prepare weekly report')" style="background:var(--yellow-soft);border:1px solid var(--yellow-deep);padding:8px 14px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer">📋 Create a task</button>
+              <button onclick="quickChat('What should I focus on today?')" style="background:var(--yellow-soft);border:1px solid var(--yellow-deep);padding:8px 14px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer">🧠 What to do today</button>
+            </div>
           </div>
         </div>
         <div class="composer">
@@ -1149,6 +1184,25 @@
     sP(user.uid, profile);
     localStorage.setItem('ezp_user', JSON.stringify({uid:user.uid, identifier:email, fullName:profile.displayName, plan:profile.plan}));
     document.getElementById('login-overlay').style.display='none';
+
+    // Auto-detect connected services from sign-in method
+    const provider = user.providerData?.[0]?.providerId || '';
+    if(provider === 'google.com' || email.includes('@gmail.com')){
+      // Google sign-in auto-connects Gmail, Calendar, Docs, Drive
+      // Mark them as "live" in the integration cards
+      setTimeout(()=>{
+        document.querySelectorAll('.int-toggle-btn[data-service]').forEach(btn => {
+          const svc = btn.dataset.service;
+          if(['gmail','calendar','google_docs'].includes(svc)){
+            btn.dataset.state='live';
+            btn.classList.remove('itb-disconnected','itb-connected');
+            btn.classList.add('itb-live');
+            btn.textContent='LIVE';
+          }
+        });
+      }, 500);
+    }
+
     if(admin || profile.subscriptionActive){
       startIntegrationAutoDetect();
     } else {
@@ -1493,6 +1547,34 @@
   document.querySelectorAll('.task .check').forEach(c=>{
     c.addEventListener('click',()=>{const t=c.closest('.task');t.classList.toggle('done');c.textContent=t.classList.contains('done')?'✓':''});
   });
+
+  // ===== AUTOMATION TOGGLE =====
+  function toggleAutomation(){
+    const on = document.getElementById('automation-toggle').checked;
+    document.getElementById('automation-status').textContent = on ? 'ON' : 'OFF';
+    document.getElementById('automation-status').style.color = on ? 'var(--green)' : 'var(--muted-2)';
+    localStorage.setItem('ezp_automation', on ? 'on' : 'off');
+    // In production: POST /api/settings/automation { enabled: on }
+  }
+  // Restore automation state
+  (function(){
+    const saved = localStorage.getItem('ezp_automation');
+    if(saved === 'off'){
+      const t = document.getElementById('automation-toggle');
+      if(t){ t.checked = false; toggleAutomation(); }
+    }
+  })();
+
+  // Quick chat — click a suggestion button → jumps to chat with pre-filled message
+  function quickChat(msg){
+    goTo('chat');
+    const empty = document.getElementById('chat-empty');
+    if(empty) empty.style.display = 'none';
+    setTimeout(()=>{
+      const input = document.getElementById('chat-input');
+      if(input){ input.value = msg; sendMsg(); }
+    }, 100);
+  }
 
   // ===== CHAT =====
   const chatInput=document.getElementById('chat-input');
