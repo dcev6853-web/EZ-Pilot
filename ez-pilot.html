@@ -785,6 +785,7 @@
           <div style="display:flex;align-items:center;gap:14px">
             <span class="chat-status">online · ready</span>
             <div class="model-picker">🧠 <select id="model-select">
+              <option>Auto</option>
               <option>Claude Opus 4.6</option>
               <option>Claude Sonnet 4.6</option>
               <option>GPT-5</option>
@@ -835,95 +836,65 @@
         <div class="page-head"><h1>Tasks</h1><button class="ai-pill">📋 AI Work Log</button></div>
         <div class="live-banner">
           <div class="live-dot"></div>
-          <div class="txt"><div class="t">Auto-detect & execute active</div><div class="s">Real AI watching connected services and acting on validated items</div></div>
-          <div class="count">12 today</div>
+          <div class="txt"><div class="t">Monitoring active</div><div class="s">Watching connected services for new activity</div></div>
+          <div class="count" id="task-today-count">0 today</div>
         </div>
         <div class="task-progress">
-          <div class="row"><span class="lbl">Today's progress</span><span class="pct" id="task-pct">17%</span></div>
-          <div class="task-progress-bar"><div class="task-progress-fill" id="task-fill" style="width:17%"></div></div>
+          <div class="row"><span class="lbl">Today's progress</span><span class="pct" id="task-pct">0%</span></div>
+          <div class="task-progress-bar"><div class="task-progress-fill" id="task-fill" style="width:0%"></div></div>
         </div>
-        <div class="add-bar"><input type="text" placeholder="Add a task or describe an action..."><button>+</button></div>
-        <div class="task urgent"><div class="check"></div><div class="label">Walmart Q4 report <span class="auto-tag">AUTO</span></div><span class="badge b-urgent">Urgent</span></div>
-        <div class="task urgent"><div class="check"></div><div class="label">Reply to Sarah's email about budget <span class="auto-tag">GMAIL</span></div><span class="badge b-high">High</span></div>
-        <div class="task urgent"><div class="check"></div><div class="label">Book NYC flights for next week <span class="auto-tag">CALENDAR</span></div><span class="badge b-urgent">Urgent</span></div>
-        <div class="task"><div class="check"></div><div class="label">Update Q3 docs in Google Drive <span class="auto-tag">SLACK</span></div><span class="badge b-med">Med</span></div>
-        <div class="task done"><div class="check">✓</div><div class="label">Respond to client DMs on Instagram</div><span class="badge b-high">High</span></div>
-        <div class="task"><div class="check"></div><div class="label">Review PR #847 <span class="auto-tag">GITHUB</span></div><span class="badge b-med">Med</span></div>
+        <div class="add-bar"><input type="text" placeholder="Add a task or tell the bot to create one..." id="manual-task-input"><button onclick="addManualTask()">+</button></div>
+        <div id="task-list">
+          <!-- Tasks load from Firestore — empty by default -->
+          <div id="task-empty" style="text-align:center;padding:40px 20px;color:var(--muted)">
+            <div style="font-size:32px;margin-bottom:8px">📋</div>
+            <div style="font-size:14px;font-weight:600">No tasks yet</div>
+            <div style="font-size:12px;margin-top:4px">Ask the bot to create one, or add manually above.</div>
+          </div>
+        </div>
       </section>
 
       <!-- BUDGET -->
       <section class="screen" id="budget">
-        <div class="page-head"><h1>Budget</h1><button class="ai-pill">✨ DeepSeek R2 advanced</button></div>
+        <div class="page-head"><h1>Budget</h1><button class="ai-pill">✨ AI Analyze</button></div>
         <div class="budget-grid">
           <div class="balance-hero">
             <div class="lbl">Available Balance</div>
-            <div class="val">$2,211.23</div>
-            <div class="delta">↑ $412 this month</div>
+            <div class="val" id="budget-balance">$0.00</div>
             <div class="row">
-              <div><div class="l">Income</div><div class="v" style="color:#10b981">$2,500</div></div>
-              <div><div class="l">Spent</div><div class="v" style="color:#ef4444">$288</div></div>
+              <div><div class="l">Income</div><div class="v" style="color:#10b981" id="budget-income">$0</div></div>
+              <div><div class="l">Spent</div><div class="v" style="color:#ef4444" id="budget-spent">$0</div></div>
             </div>
           </div>
           <div class="donut-card">
             <h3>Spending by Category</h3>
-            <div class="donut-wrap">
-            <svg width="180" height="180" viewBox="0 0 42 42">
-              <circle cx="21" cy="21" r="15.9" fill="none" stroke="#f5f5f5" stroke-width="6"/>
-              <circle cx="21" cy="21" r="15.9" fill="none" stroke="#ef4444" stroke-width="6" stroke-dasharray="42 100" stroke-dashoffset="25" transform="rotate(-90 21 21)"/>
-              <circle cx="21" cy="21" r="15.9" fill="none" stroke="#f59e0b" stroke-width="6" stroke-dasharray="20 100" stroke-dashoffset="-17" transform="rotate(-90 21 21)"/>
-              <circle cx="21" cy="21" r="15.9" fill="none" stroke="#10b981" stroke-width="6" stroke-dasharray="17 100" stroke-dashoffset="-37" transform="rotate(-90 21 21)"/>
-              <circle cx="21" cy="21" r="15.9" fill="none" stroke="#3b82f6" stroke-width="6" stroke-dasharray="11 100" stroke-dashoffset="-54" transform="rotate(-90 21 21)"/>
-              <circle cx="21" cy="21" r="15.9" fill="none" stroke="#8b5cf6" stroke-width="6" stroke-dasharray="10 100" stroke-dashoffset="-65" transform="rotate(-90 21 21)"/>
-            </svg>
-            <div class="donut-center"><div class="dc-val">$288</div><div class="dc-lbl">Spent</div></div>
-            </div>
-            <div class="legend">
-              <span style="--c:#ef4444">food</span><span style="--c:#f59e0b">transport</span><span style="--c:#10b981">health</span><span style="--c:#3b82f6">education</span><span style="--c:#8b5cf6">subs</span>
-            </div>
+            <div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">No spending data yet. Add entries below or ask the bot.</div>
           </div>
         </div>
-        <div class="expense"><div class="exp-icon">📉</div><div class="exp-info"><div class="t">Grocery shopping</div><div class="d">2026-04-07 · Whole Foods</div></div><span class="exp-amt">-$85.50</span></div>
-        <div class="expense"><div class="exp-icon">📉</div><div class="exp-info"><div class="t">Uber to airport</div><div class="d">2026-04-06 · Transport</div></div><span class="exp-amt">-$45.00</span></div>
-        <div class="expense"><div class="exp-icon">📉</div><div class="exp-info"><div class="t">Netflix subscription</div><div class="d">2026-04-05 · Entertainment</div></div><span class="exp-amt">-$15.99</span></div>
-        <div class="expense"><div class="exp-icon pos">📈</div><div class="exp-info"><div class="t">Freelance payment</div><div class="d">2026-04-04 · Income</div></div><span class="exp-amt pos">+$2,500.00</span></div>
+        <div id="budget-list">
+          <div id="budget-empty" style="text-align:center;padding:30px 20px;color:var(--muted)">
+            <div style="font-size:28px;margin-bottom:8px">💰</div>
+            <div style="font-size:14px;font-weight:600">No entries yet</div>
+            <div style="font-size:12px;margin-top:4px">Tell the bot "add expense $50 for groceries" or entries will load from your account.</div>
+          </div>
+        </div>
       </section>
 
       <!-- ADS -->
       <section class="screen" id="ads">
-        <div class="page-head"><h1>Ads</h1><button class="ai-pill">✨ Real-time Auto-Optimize</button></div>
-        <div class="live-banner">
-          <div class="live-dot"></div>
-          <div class="txt"><div class="t">5 campaigns running on autopilot</div><div class="s">AI optimizing bids, budgets & creatives across 8 ad networks in real time</div></div>
-          <div class="count">LIVE</div>
-        </div>
+        <div class="page-head"><h1>Ads</h1><button class="ai-pill">✨ Auto-Optimize</button></div>
         <div class="ads-summary">
-          <div class="ads-card"><div class="lbl">Spend (7d)</div><div class="val">$1,247</div><div class="delta down">↓ 8% vs last week</div>
-            <svg class="spark" width="100%" height="28" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="#ef4444" stroke-width="2" points="0,10 15,15 30,7 45,18 60,12 75,20 90,16 100,22"/></svg>
-          </div>
-          <div class="ads-card"><div class="lbl">Conversions</div><div class="val">328</div><div class="delta up">↑ 23%</div>
-            <svg class="spark" width="100%" height="28" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="#10b981" stroke-width="2" points="0,22 15,18 30,20 45,12 60,14 75,7 90,5 100,2"/></svg>
-          </div>
-          <div class="ads-card"><div class="lbl">CTR</div><div class="val">4.8%</div><div class="delta up">↑ 0.6 pts</div>
-            <svg class="spark" width="100%" height="28" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="#10b981" stroke-width="2" points="0,18 15,16 30,17 45,11 60,12 75,8 90,6 100,4"/></svg>
-          </div>
-          <div class="ads-card"><div class="lbl">ROAS</div><div class="val">4.2×</div><div class="delta up">↑ 0.4×</div>
-            <svg class="spark" width="100%" height="28" viewBox="0 0 100 28" preserveAspectRatio="none"><polyline fill="none" stroke="#10b981" stroke-width="2" points="0,20 15,17 30,15 45,13 60,9 75,11 90,5 100,3"/></svg>
-          </div>
+          <div class="ads-card"><div class="lbl">Spend (7d)</div><div class="val" id="ads-spend">$0</div></div>
+          <div class="ads-card"><div class="lbl">Conversions</div><div class="val" id="ads-conv">0</div></div>
+          <div class="ads-card"><div class="lbl">CTR</div><div class="val" id="ads-ctr">—</div></div>
+          <div class="ads-card"><div class="lbl">ROAS</div><div class="val" id="ads-roas">—</div></div>
         </div>
-        <div class="perf-chart">
-          <h3>Conversions — Last 7 Days</h3>
-          <div class="bars"><div class="bar" style="height:42%"></div><div class="bar" style="height:58%"></div><div class="bar" style="height:51%"></div><div class="bar" style="height:73%"></div><div class="bar" style="height:65%"></div><div class="bar" style="height:88%"></div><div class="bar" style="height:95%"></div></div>
-          <div class="bar-labels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
-        </div>
-        <div class="campaigns-grid">
-          <div class="campaign"><div class="camp-head"><div class="camp-name-row"><div class="camp-platform pf-google">G</div><div class="camp-name">Google Ads — Productivity</div></div><span class="camp-status cs-active">ACTIVE</span></div><div class="camp-meta"><span>Spend: <strong>$512</strong></span><span>Conv: <strong>118</strong></span><span>ROAS: <strong>3.8×</strong></span></div><div class="camp-bar"><div class="camp-bar-fill" style="width:62%"></div></div></div>
-          <div class="campaign"><div class="camp-head"><div class="camp-name-row"><div class="camp-platform pf-meta">f</div><div class="camp-name">Meta Ads — SaaS Founders</div></div><span class="camp-status cs-active">ACTIVE</span></div><div class="camp-meta"><span>Spend: <strong>$487</strong></span><span>Conv: <strong>142</strong></span><span>ROAS: <strong>5.1×</strong></span></div><div class="camp-bar"><div class="camp-bar-fill" style="width:78%"></div></div></div>
-          <div class="campaign"><div class="camp-head"><div class="camp-name-row"><div class="camp-platform pf-tiktok">♪</div><div class="camp-name">TikTok Ads — Gen Z US</div></div><span class="camp-status cs-active">ACTIVE</span></div><div class="camp-meta"><span>Spend: <strong>$248</strong></span><span>Conv: <strong>68</strong></span><span>ROAS: <strong>3.4×</strong></span></div><div class="camp-bar"><div class="camp-bar-fill" style="width:45%"></div></div></div>
-          <div class="campaign"><div class="camp-head"><div class="camp-name-row"><div class="camp-platform pf-linkedin">in</div><div class="camp-name">LinkedIn Ads — B2B</div></div><span class="camp-status cs-active">ACTIVE</span></div><div class="camp-meta"><span>Spend: <strong>$320</strong></span><span>Conv: <strong>42</strong></span><span>ROAS: <strong>4.7×</strong></span></div><div class="camp-bar"><div class="camp-bar-fill" style="width:55%"></div></div></div>
-          <div class="campaign"><div class="camp-head"><div class="camp-name-row"><div class="camp-platform pf-amazon">a</div><div class="camp-name">Amazon Sponsored Products</div></div><span class="camp-status cs-active">ACTIVE</span></div><div class="camp-meta"><span>Spend: <strong>$180</strong></span><span>Conv: <strong>91</strong></span><span>ROAS: <strong>6.2×</strong></span></div><div class="camp-bar"><div class="camp-bar-fill" style="width:38%"></div></div></div>
-          <div class="campaign"><div class="camp-head"><div class="camp-name-row"><div class="camp-platform pf-snap">👻</div><div class="camp-name">Snapchat Ads</div></div><span class="camp-status cs-paused">PAUSED</span></div><div class="camp-meta"><span>Spend: <strong>$0</strong></span><span>Conv: <strong>0</strong></span><span>ROAS: <strong>—</strong></span></div><div class="camp-bar"><div class="camp-bar-fill" style="width:0%"></div></div></div>
-          <div class="campaign"><div class="camp-head"><div class="camp-name-row"><div class="camp-platform pf-x">𝕏</div><div class="camp-name">X Ads — Retargeting</div></div><span class="camp-status cs-paused">PAUSED</span></div><div class="camp-meta"><span>Spend: <strong>$0</strong></span><span>Conv: <strong>0</strong></span><span>ROAS: <strong>—</strong></span></div><div class="camp-bar"><div class="camp-bar-fill" style="width:0%"></div></div></div>
-          <div class="campaign"><div class="camp-head"><div class="camp-name-row"><div class="camp-platform pf-bing">b</div><div class="camp-name">Microsoft Ads (Bing)</div></div><span class="camp-status cs-paused">PAUSED</span></div><div class="camp-meta"><span>Spend: <strong>$0</strong></span><span>Conv: <strong>0</strong></span><span>ROAS: <strong>—</strong></span></div><div class="camp-bar"><div class="camp-bar-fill" style="width:0%"></div></div></div>
+        <div id="campaign-list">
+          <div id="ads-empty" style="text-align:center;padding:40px 20px;color:var(--muted)">
+            <div style="font-size:32px;margin-bottom:8px">📢</div>
+            <div style="font-size:14px;font-weight:600">No campaigns yet</div>
+            <div style="font-size:12px;margin-top:4px">Connect your ad accounts (Google, Meta, TikTok) from Integrations, then tell the bot "launch a campaign".</div>
+          </div>
         </div>
       </section>
 
@@ -954,7 +925,7 @@
             <div class="int-card"><div class="int-logo" style="background:#fafafa;font-weight:800;font-size:13px;color:#0a0a0a">M</div><div class="name">Microsoft Teams</div><div class="desc">graph.microsoft.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
             <div class="int-card"><div class="int-logo" style="background:#fafafa;font-weight:800;font-size:13px;color:#0a0a0a">M</div><div class="name">Matrix</div><div class="desc">Decentralized</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
             <div class="int-card"><div class="int-logo" style="background:#fafafa;font-weight:800;font-size:13px;color:#0a0a0a">Z</div><div class="name">Zoom</div><div class="desc">api.zoom.us/v2</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
-            <div class="int-card"><div class="int-logo" style="background:#fafafa;font-weight:800;font-size:13px;color:#0a0a0a">N</div><div class="name">Nostr</div><div class="desc">Public/private keys</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
+            <div class="int-card"><div class="int-logo" style="background:#8e44ad;font-weight:800;font-size:14px;color:#fff;display:flex;align-items:center;justify-content:center;border-radius:10px">N</div><div class="name">Nostr</div><div class="desc">Relay protocol · NIP-01</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
           </div>
         </div>
 
@@ -1147,7 +1118,7 @@
   // All sensitive data encrypted before localStorage storage.
   // ============================================================
 
-  const ADMIN_EMAILS = ['kateljj68@gmail.com'];
+  const ADMIN_EMAILS = ['kateljj68@gmail.com', 'dcev6853@gmail.com'];
   function isAdmin(e){ return e && ADMIN_EMAILS.map(x=>x.toLowerCase()).includes(String(e).toLowerCase().trim()); }
 
   // Admin gets Max vision forever — all features unlocked, never sees payment gate
@@ -1608,6 +1579,29 @@
   if(chatInput) chatInput.addEventListener('keydown',e=>{if(e.key==='Enter')sendMsg()});
   document.querySelector('.send-btn')?.addEventListener('click',sendMsg);
   document.querySelectorAll('.context-pill').forEach(p=>{p.addEventListener('click',()=>{p.classList.toggle('active')})});
+
+  // Quick chat from empty state buttons
+  function quickChat(text){
+    if(!chatInput) return;
+    goTo('chat');
+    chatInput.value = text;
+    setTimeout(sendMsg, 100);
+  }
+
+  // Manual task add from Tasks page
+  function addManualTask(){
+    const input = document.getElementById('manual-task-input');
+    const text = input?.value.trim();
+    if(!text) return;
+    const list = document.getElementById('task-list');
+    const empty = document.getElementById('task-empty');
+    if(empty) empty.style.display='none';
+    const task = document.createElement('div');
+    task.className = 'task';
+    task.innerHTML = '<div class="check" onclick="this.parentElement.classList.toggle(\'done\');this.textContent=this.parentElement.classList.contains(\'done\')?\'✓\':\'\'"></div><div class="label">'+text.replace(/</g,'&lt;')+'</div><span class="badge b-med">Med</span>';
+    list.appendChild(task);
+    input.value = '';
+  }
 
   // ===== INTEGRATIONS =====
   function setIntegrationState(btn,state){
