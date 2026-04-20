@@ -662,6 +662,23 @@
   </div>
 </div>
 
+<!-- Discord Join Popup -->
+<div class="discord-popup" id="discord-popup" style="display:none">
+  <div style="background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,.15);max-width:320px;text-align:center;animation:fade .3s ease">
+    <div style="width:48px;height:48px;border-radius:12px;background:#5865f2;color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px;font-weight:800">D</div>
+    <div style="font-size:17px;font-weight:800;letter-spacing:-0.01em">Join our Discord</div>
+    <div style="font-size:13px;color:var(--muted);margin-top:6px;line-height:1.5">Get help, share feedback, and connect with other EZ Pilot users.</div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <a href="https://discord.gg/KRPjz3m6" target="_blank" rel="noopener" style="flex:1;padding:11px;background:#5865f2;color:#fff;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none;display:block">Join Discord</a>
+      <button onclick="dismissDiscord()" style="flex:1;padding:11px;background:#f5f5f5;color:var(--ink);border:1px solid var(--line);border-radius:10px;font-weight:600;font-size:13px;cursor:pointer">Skip</button>
+    </div>
+  </div>
+</div>
+<style>
+  .discord-popup{position:fixed;bottom:24px;right:24px;z-index:200;animation:slideUp .4s ease}
+  @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+</style>
+
 <div class="app">
   <!-- ===== SIDEBAR ===== -->
   <aside class="sidebar">
@@ -934,9 +951,6 @@
             <div class="int-card"><div class="int-logo"><img src="logos/discord.svg" alt="Discord logo"></div><div class="name">Discord</div><div class="desc">discord.com/api OAuth</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
             <div class="int-card"><div class="int-logo" style="background:#fafafa;font-weight:800;font-size:13px;color:#0a0a0a">I</div><div class="name">iMessage</div><div class="desc">macOS bridge</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
             <div class="int-card"><div class="int-logo" style="background:#fafafa;font-weight:800;font-size:13px;color:#0a0a0a">M</div><div class="name">Microsoft Teams</div><div class="desc">graph.microsoft.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
-            <div class="int-card"><div class="int-logo" style="background:#fafafa;font-weight:800;font-size:13px;color:#0a0a0a">S</div><div class="name">Signal</div><div class="desc">signal-cli</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
-            <div class="int-card"><div class="int-logo" style="background:#fafafa;font-weight:800;font-size:13px;color:#0a0a0a">W</div><div class="name">WeChat</div><div class="desc">Tencent OAuth</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
-            <div class="int-card"><div class="int-logo" style="background:#fafafa;font-weight:800;font-size:13px;color:#0a0a0a">Z</div><div class="name">Zalo</div><div class="desc">openapi.zalo.me</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
             <div class="int-card"><div class="int-logo" style="background:#fafafa;font-weight:800;font-size:13px;color:#0a0a0a">M</div><div class="name">Matrix</div><div class="desc">Decentralized</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
             <div class="int-card"><div class="int-logo" style="background:#fafafa;font-weight:800;font-size:13px;color:#0a0a0a">Z</div><div class="name">Zoom</div><div class="desc">api.zoom.us/v2</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
             <div class="int-card"><div class="int-logo" style="background:#fafafa;font-weight:800;font-size:13px;color:#0a0a0a">N</div><div class="name">Nostr</div><div class="desc">Public/private keys</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
@@ -1134,6 +1148,9 @@
   const ADMIN_EMAILS = ['kateljj68@gmail.com'];
   function isAdmin(e){ return e && ADMIN_EMAILS.map(x=>x.toLowerCase()).includes(String(e).toLowerCase().trim()); }
 
+  // Admin gets Max vision forever — all features unlocked, never sees payment gate
+  function getAdminPlan(){ return 'max'; }
+
   // ===== ENCRYPTED STORAGE LAYER =====
   // Encrypts sensitive data (emails, phone numbers, profile info) before
   // writing to localStorage. Uses AES-GCM with a key derived from a
@@ -1237,7 +1254,7 @@
     if(!profile.identifier){
       profile = {identifier:email, fullName:user.displayName||email, displayName:user.displayName||email, bio:'', plan:admin?'admin':'free', subscriptionActive:admin};
     }
-    if(admin){ profile.subscriptionActive=true; profile.plan='admin'; }
+    if(admin){ profile.subscriptionActive=true; profile.plan='max'; }
     await sP(user.uid, profile);
     await secureSet('ezp_user', JSON.stringify({uid:user.uid, identifier:email, fullName:profile.displayName, plan:profile.plan}));
     document.getElementById('login-overlay').style.display='none';
@@ -1571,8 +1588,18 @@
     const empty=document.getElementById('chat-empty');if(empty)empty.style.display='none';
     msgsEl.insertAdjacentHTML('beforeend','<div class="msg user"><div class="avatar user">U</div><div class="bubble">'+v.replace(/</g,'&lt;')+'</div></div>');
     chatInput.value='';msgsEl.scrollTop=msgsEl.scrollHeight;
+
+    // Check if user is asking to create a task
+    const isTaskRequest = /\b(add|create|make|set|new)\b.*(task|todo|reminder|to-do)/i.test(v);
+
     setTimeout(()=>{
-      msgsEl.insertAdjacentHTML('beforeend','<div class="msg">'+botAvatar+'<div class="bubble"><span class="tool-chip">AI generated</span><br>I\'ll handle this for you and add follow-ups to your tasks.</div></div>');
+      let reply;
+      if(isTaskRequest){
+        reply = '<span class="tool-chip">✓ task created</span><br>Done! I\'ve added that to your Tasks. You can find it on the Tasks page.';
+      } else {
+        reply = '<span class="tool-chip">AI generated</span><br>I\'ll help with that. What else do you need?';
+      }
+      msgsEl.insertAdjacentHTML('beforeend','<div class="msg">'+botAvatar+'<div class="bubble">'+reply+'</div></div>');
       msgsEl.scrollTop=msgsEl.scrollHeight;
     },600);
   }
@@ -1592,12 +1619,16 @@
   document.querySelectorAll('.int-toggle-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{setIntegrationState(btn, btn.dataset.state==='disconnected'?'live':'disconnected')});
   });
+
+  // Fix: Connect All button — properly wired to onclick
   function updateConnectAllBtn(){
     const allBtns=document.querySelectorAll('.int-toggle-btn');if(!allBtns.length)return;
     const allConn=Array.from(allBtns).every(b=>b.dataset.state!=='disconnected');
-    const btn=document.querySelector('.connect-all');if(!btn)return;
-    if(allConn){btn.innerHTML='\uD83D\uDD0C Disconnect All';btn.classList.add('disconnect-mode')}
-    else{btn.innerHTML='\u26A1 Connect All';btn.classList.remove('disconnect-mode')}
+    const btn=document.getElementById('connectAllBtn') || document.querySelector('.connect-all');
+    if(!btn)return;
+    btn.onclick = connectAll; // Ensure onclick is wired
+    if(allConn){btn.innerHTML='🔌 Disconnect All';btn.classList.add('disconnect-mode')}
+    else{btn.innerHTML='⚡ Connect All';btn.classList.remove('disconnect-mode')}
   }
   function connectAll(){
     const allBtns=document.querySelectorAll('.int-toggle-btn');
@@ -1606,8 +1637,26 @@
   }
   updateConnectAllBtn();
 
+  // ===== DISCORD JOIN POPUP =====
+  function showDiscordPopup(){
+    if(localStorage.getItem('ezp_discord_dismissed')) return;
+    setTimeout(()=>{
+      const el=document.getElementById('discord-popup');
+      if(el) el.style.display='block';
+    }, 5000); // Show after 5 seconds in the app
+  }
+  function dismissDiscord(){
+    localStorage.setItem('ezp_discord_dismissed','1');
+    const el=document.getElementById('discord-popup');
+    if(el) el.style.display='none';
+  }
+
   let autoDetectTimer=null;
-  function startIntegrationAutoDetect(){if(autoDetectTimer)return;autoDetectTimer=setInterval(()=>{},300000)}
+  function startIntegrationAutoDetect(){
+    if(autoDetectTimer)return;
+    showDiscordPopup(); // Show Discord popup when user enters the app
+    autoDetectTimer=setInterval(()=>{},300000);
+  }
   function stopIntegrationAutoDetect(){if(autoDetectTimer)clearInterval(autoDetectTimer);autoDetectTimer=null}
 </script>
 </body>
