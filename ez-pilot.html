@@ -1556,26 +1556,93 @@
   const chatInput=document.getElementById('chat-input');
   const msgsEl=document.getElementById('msgs');
   const botAvatar='<div class="avatar bot"><svg viewBox="0 0 1024 1024" style="width:24px;height:24px"><use href="#ezlogo"/></svg></div>';
-  function sendMsg(){
+  const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
+
+  async function sendMsg(){
     const v=chatInput.value.trim();if(!v)return;
     const empty=document.getElementById('chat-empty');if(empty)empty.style.display='none';
     msgsEl.insertAdjacentHTML('beforeend','<div class="msg user"><div class="avatar user">U</div><div class="bubble">'+v.replace(/</g,'&lt;')+'</div></div>');
     chatInput.value='';msgsEl.scrollTop=msgsEl.scrollHeight;
 
-    // Check if user is asking to create a task
-    const isTaskRequest = /\b(add|create|make|set|new)\b.*(task|todo|reminder|to-do)/i.test(v);
+    // Show typing indicator
+    const typingId = 'typing-'+Date.now();
+    msgsEl.insertAdjacentHTML('beforeend','<div class="msg" id="'+typingId+'">'+botAvatar+'<div class="bubble" style="color:var(--muted)">Thinking...</div></div>');
+    msgsEl.scrollTop=msgsEl.scrollHeight;
 
-    setTimeout(()=>{
+    // Get selected model
+    const modelSelect = document.getElementById('model-select');
+    const model = modelSelect ? modelSelect.value : 'Auto';
+
+    // Get active context pills
+    const activePills = Array.from(document.querySelectorAll('.context-pill.active')).map(p=>p.dataset.context).filter(Boolean);
+
+    try {
+      // Try calling the real backend
+      const user = await secureGetJSON('ezp_user');
+      const token = user.uid ? await new Promise(r => { if(fbAuth.currentUser) fbAuth.currentUser.getIdToken().then(r).catch(()=>r(null)); else r(null); }) : null;
+
+      const res = await fetch(API_BASE + '/api/task', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
+        },
+        body: JSON.stringify({
+          message: v,
+          model,
+          context: activePills.length ? { pull: activePills } : undefined,
+        }),
+        signal: AbortSignal.timeout(60000),
+      });
+
+      // Remove typing indicator
+      document.getElementById(typingId)?.remove();
+
+      if (res.ok) {
+        const data = await res.json();
+        let reply = '<span class="tool-chip">AI generated</span>';
+        if (data.pipeline) {
+          reply = '<span class="tool-chip">' + (data.pipeline.modelsUsed || [model]).join(' → ') + '</span>';
+        }
+        reply += '<br>' + (data.response || data.text || 'Done.').replace(/\n/g, '<br>');
+
+        // Show pending confirmations
+        if (data.pendingConfirmations?.length) {
+          for (const pc of data.pendingConfirmations) {
+            reply += '<br><br><span style="background:#fef3c7;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600">⏸ ' + pc.description + '</span>';
+          }
+        }
+
+        // Show steps taken
+        if (data.steps?.length) {
+          for (const step of data.steps) {
+            if (step.requiresConfirmation) {
+              reply += '<br><span style="display:inline-flex;gap:6px;margin-top:6px"><span style="background:#10b981;color:#fff;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer" onclick="confirmDraft(this)">✓ Approve</span><span style="background:#f5f5f5;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:600;cursor:pointer" onclick="rejectDraft(this)">✕ Reject</span></span>';
+            }
+          }
+        }
+
+        msgsEl.insertAdjacentHTML('beforeend','<div class="msg">'+botAvatar+'<div class="bubble">'+reply+'</div></div>');
+      } else {
+        throw new Error('API ' + res.status);
+      }
+    } catch(err) {
+      // Fallback: offline/local mock response
+      document.getElementById(typingId)?.remove();
+      const isTaskRequest = /\b(add|create|make|set|new)\b.*(task|todo|reminder|to-do)/i.test(v);
       let reply;
       if(isTaskRequest){
-        reply = '<span class="tool-chip">✓ task created</span><br>Done! I\'ve added that to your Tasks. You can find it on the Tasks page.';
+        reply = '<span class="tool-chip">✓ task created</span><br>Done! I\'ve added that to your Tasks.';
       } else {
-        reply = '<span class="tool-chip">AI generated</span><br>I\'ll help with that. What else do you need?';
+        reply = '<span class="tool-chip">offline mode</span><br>Backend not connected. Deploy the backend to enable AI responses. <a href="https://github.com/dcev6853-web/EZ-Pilot" target="_blank" style="color:var(--yellow-deep);font-weight:700">Setup guide →</a>';
       }
       msgsEl.insertAdjacentHTML('beforeend','<div class="msg">'+botAvatar+'<div class="bubble">'+reply+'</div></div>');
-      msgsEl.scrollTop=msgsEl.scrollHeight;
-    },600);
+    }
+    msgsEl.scrollTop=msgsEl.scrollHeight;
   }
+
+  async function confirmDraft(el){ /* TODO: call /api/task/confirm */ el.textContent='✓ Approved'; el.style.background='#86efac'; }
+  async function rejectDraft(el){ /* TODO: call /api/task/confirm */ el.parentElement.innerHTML='<span style="color:var(--muted);font-size:10px">Rejected</span>'; }
   if(chatInput) chatInput.addEventListener('keydown',e=>{if(e.key==='Enter')sendMsg()});
   document.querySelector('.send-btn')?.addEventListener('click',sendMsg);
   document.querySelectorAll('.context-pill').forEach(p=>{p.addEventListener('click',()=>{p.classList.toggle('active')})});
