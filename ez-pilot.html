@@ -690,7 +690,7 @@
       <div class="nav-item active" data-screen="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Home</div>
       <div class="nav-item" data-screen="chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Chat</div>
       <div class="nav-item" data-screen="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Tasks</div>
-      <div class="nav-item" data-screen="ads"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-5v12L3 14v-3z"/></svg>Ads</div>
+      <div class="nav-item" data-screen="agents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Agents</div>
       <div class="nav-item" data-screen="budget"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>Budget</div>
       <div class="nav-item" data-screen="integrations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Integrations</div>
       <div class="nav-item" data-screen="pricing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Pricing</div>
@@ -784,20 +784,8 @@
           <h1>Chat</h1>
           <div style="display:flex;align-items:center;gap:14px">
             <span class="chat-status">online · ready</span>
-            <div class="model-picker">🧠 <select id="model-select">
-              <option>Auto</option>
-              <option>Claude Opus 4.6</option>
-              <option>Claude Sonnet 4.6</option>
-              <option>GPT-5</option>
-              <option>GPT-4</option>
-              <option>OpenAI o1</option>
-              <option>Gemini 2.5 Pro</option>
-              <option>Grok 4</option>
-              <option>DeepSeek R2</option>
-              <option>Mistral Large</option>
-              <option>Claude Sonnet 3.7</option>
-              <option>Ollama (Local)</option>
-            </select></div>
+            <div class="model-picker" style="cursor:default">🧠 <span style="font-size:12px;font-weight:600;color:var(--muted)">Auto-select</span></div>
+            <input type="hidden" id="model-select" value="Auto">
           </div>
         </div>
         <div class="chat-msgs" id="msgs">
@@ -817,7 +805,7 @@
           <div class="context-row">
             <button class="context-pill" data-context="budget">💰 Pull budget</button>
             <button class="context-pill" data-context="tasks">📋 Pull tasks</button>
-            <button class="context-pill" data-context="ads">📢 Pull ads</button>
+            <button class="context-pill" data-context="agents">🌐 Browser agent</button>
             <span class="upload-counter" id="upload-counter" style="margin-left:auto">📎 0/15 files today</span>
           </div>
           <div class="composer-inner">
@@ -880,20 +868,55 @@
         </div>
       </section>
 
-      <!-- ADS -->
-      <section class="screen" id="ads">
-        <div class="page-head"><h1>Ads</h1><button class="ai-pill">✨ Auto-Optimize</button></div>
-        <div class="ads-summary">
-          <div class="ads-card"><div class="lbl">Spend (7d)</div><div class="val" id="ads-spend">$0</div></div>
-          <div class="ads-card"><div class="lbl">Conversions</div><div class="val" id="ads-conv">0</div></div>
-          <div class="ads-card"><div class="lbl">CTR</div><div class="val" id="ads-ctr">—</div></div>
-          <div class="ads-card"><div class="lbl">ROAS</div><div class="val" id="ads-roas">—</div></div>
+      <!-- BROWSER AGENTS (Max plan only) -->
+      <section class="screen" id="agents">
+        <div class="page-head"><h1>Browser Agents</h1><span class="ai-pill" style="background:#0a0a0a;color:var(--yellow);border:none">⚡ Max plan</span></div>
+        <div class="live-banner">
+          <div class="live-dot"></div>
+          <div class="txt"><div class="t">Claude Sonnet — Web browsing agent</div><div class="s">AI can browse websites, fill forms, extract data, and take actions in real time</div></div>
+          <div class="count">READY</div>
         </div>
-        <div id="campaign-list">
-          <div id="ads-empty" style="text-align:center;padding:40px 20px;color:var(--muted)">
-            <div style="font-size:32px;margin-bottom:8px">📢</div>
-            <div style="font-size:14px;font-weight:600">No campaigns yet</div>
-            <div style="font-size:12px;margin-top:4px">Connect your ad accounts (Google, Meta, TikTok) from Integrations, then tell the bot "launch a campaign".</div>
+
+        <div id="agent-gate" style="display:none;text-align:center;padding:40px 20px">
+          <div style="font-size:40px;margin-bottom:12px">🔒</div>
+          <div style="font-size:16px;font-weight:700">Browser Agents require Max plan</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:6px">Upgrade to Max for AI-powered web browsing, form filling, data extraction, and automated research.</div>
+          <button onclick="goTo('pricing')" style="margin-top:16px;background:var(--yellow);color:var(--ink);border:1px solid var(--yellow-deep);padding:11px 22px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer">Upgrade to Max →</button>
+        </div>
+
+        <div id="agent-content">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+            <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer" onclick="startBrowserTask('Research competitors and summarize their pricing')">
+              <div style="font-size:14px;font-weight:700">🔍 Research</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:4px">Browse websites, extract info, compare data</div>
+            </div>
+            <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer" onclick="startBrowserTask('Fill out the signup form on the target website')">
+              <div style="font-size:14px;font-weight:700">📝 Form filling</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:4px">Auto-fill registration, applications, surveys</div>
+            </div>
+            <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer" onclick="startBrowserTask('Scrape product listings and organize in a spreadsheet')">
+              <div style="font-size:14px;font-weight:700">📊 Data extraction</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:4px">Scrape structured data from any website</div>
+            </div>
+            <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer" onclick="startBrowserTask('Monitor this page for changes and alert me')">
+              <div style="font-size:14px;font-weight:700">👁️ Monitoring</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:4px">Watch pages for changes, price drops, updates</div>
+            </div>
+          </div>
+
+          <div style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px">
+            <div style="display:flex;gap:8px">
+              <input type="text" id="browser-task-input" placeholder="Tell the agent what to do on the web..." style="flex:1;border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:13px;font-family:inherit">
+              <button onclick="startBrowserTask()" style="background:var(--yellow);border:1px solid var(--yellow-deep);border-radius:8px;padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer">Run →</button>
+            </div>
+          </div>
+
+          <div id="agent-log">
+            <div id="agent-empty" style="text-align:center;padding:30px;color:var(--muted)">
+              <div style="font-size:28px;margin-bottom:8px">🌐</div>
+              <div style="font-size:14px;font-weight:600">No agent runs yet</div>
+              <div style="font-size:12px;margin-top:4px">Pick a task above or describe what you need the browser to do.</div>
+            </div>
           </div>
         </div>
       </section>
@@ -936,7 +959,6 @@
             <div class="int-card"><div class="int-logo"><img src="logos/anthropic.png" alt="Claude Sonnet 4.6 logo"></div><div class="name">Claude Sonnet 4.6</div><div class="desc">api.anthropic.com</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
             <div class="int-card"><div class="int-logo"><img src="logos/openai.svg" alt="GPT-5 / o1 logo"></div><div class="name">GPT-5 / o1</div><div class="desc">api.openai.com</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
             <div class="int-card"><div class="int-logo"><img src="logos/gemini.svg" alt="Gemini 2.5 Pro logo"></div><div class="name">Gemini 2.5 Pro</div><div class="desc">generativelanguage.googleapis</div><button class="int-toggle-btn itb-connected" data-state="connected">CONNECTED</button></div>
-            <div class="int-card"><div class="int-logo"><img src="logos/deepseek.png" alt="DeepSeek R2 logo"></div><div class="name">DeepSeek R2</div><div class="desc">Finance & coding</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
             <div class="int-card"><div class="int-logo"><img src="logos/x.svg" alt="Grok 4 logo"></div><div class="name">Grok 4</div><div class="desc">api.x.ai</div><button class="int-toggle-btn itb-connected" data-state="connected">CONNECTED</button></div>
             <div class="int-card"><div class="int-logo"><img src="logos/mistral.svg" alt="Mistral Large logo"></div><div class="name">Mistral Large</div><div class="desc">api.mistral.ai</div><button class="int-toggle-btn itb-connected" data-state="connected">CONNECTED</button></div>
             <div class="int-card"><div class="int-logo"><img src="logos/anthropic.png" alt="Claude Sonnet 3.7 logo"></div><div class="name">Claude Sonnet 3.7</div><div class="desc">Reasoning engine</div><button class="int-toggle-btn itb-connected" data-state="connected">CONNECTED</button></div>
@@ -951,14 +973,6 @@
         <div class="int-section">
           <h2>Ad Networks <span class="count-pill">8</span></h2>
           <div class="int-grid">
-            <div class="int-card"><div class="int-logo"><img src="logos/googleads.png" alt="Google Ads logo"></div><div class="name">Google Ads</div><div class="desc">googleads.googleapis.com</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
-            <div class="int-card"><div class="int-logo"><img src="logos/meta.png" alt="Meta Ads logo"></div><div class="name">Meta Ads</div><div class="desc">FB & Instagram</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
-            <div class="int-card"><div class="int-logo"><img src="logos/tiktok.svg" alt="TikTok Ads logo"></div><div class="name">TikTok Ads</div><div class="desc">business-api.tiktok.com</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
-            <div class="int-card"><div class="int-logo"><img src="logos/linkedin.png" alt="LinkedIn Ads logo"></div><div class="name">LinkedIn Ads</div><div class="desc">api.linkedin.com</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
-            <div class="int-card"><div class="int-logo"><img src="logos/amazon.png" alt="Amazon Ads logo"></div><div class="name">Amazon Ads</div><div class="desc">advertising-api.amazon.com</div><button class="int-toggle-btn itb-live" data-state="live">LIVE</button></div>
-            <div class="int-card"><div class="int-logo"><img src="logos/snapchat.svg" alt="Snapchat Ads logo"></div><div class="name">Snapchat Ads</div><div class="desc">adsapi.snapchat.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
-            <div class="int-card"><div class="int-logo"><img src="logos/x.svg" alt="X Ads logo"></div><div class="name">X Ads</div><div class="desc">ads-api.x.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
-            <div class="int-card"><div class="int-logo" style="background:#fafafa;font-weight:800;font-size:13px;color:#0a0a0a">M</div><div class="name">Microsoft Ads (Bing)</div><div class="desc">api.ads.microsoft.com</div><button class="int-toggle-btn itb-disconnected" data-state="disconnected">CONNECT</button></div>
           </div>
         </div>
 
@@ -1020,10 +1034,10 @@
             <div class="trial-callout">⚡ First month free — full Pro access, no credit card required</div>
             <ul>
               <li>20 agent uses per 12h</li>
-              <li>10 advanced AI uses per 12h (Claude Opus 4.6, DeepSeek R2)</li>
+              <li>10 advanced AI uses per 12h (Claude Opus 4.6, Sonnet 3.7)</li>
               <li>Pick any AI model in chat</li>
-              <li>Advanced budgeting powered by DeepSeek R2</li>
-              <li>Google Ads + TikTok Ads</li>
+              <li>Advanced AI reasoning (Claude Sonnet 3.7)</li>
+              <li>Browser agents (web browsing AI)</li>
               <li>Auto task creation & execution</li>
               <li>Trip & hotel booking</li>
               <li>Google Docs automation</li>
@@ -1044,7 +1058,7 @@
             <ul>
               <li>Everything in Pro</li>
               <li><strong>Unlimited</strong> agent actions</li>
-              <li><strong>Unlimited</strong> Claude Opus 4.6 + DeepSeek R2</li>
+              <li><strong>Unlimited</strong> Claude Opus 4.6 + browser agents</li>
               <li>All 8 ad networks (Google, Meta, TikTok, LinkedIn, Amazon, Snap, X, Bing)</li>
               <li>Real-time AI ad analysis & optimization</li>
               <li>Priority agent execution</li>
@@ -1643,6 +1657,79 @@
 
   async function confirmDraft(el){ /* TODO: call /api/task/confirm */ el.textContent='✓ Approved'; el.style.background='#86efac'; }
   async function rejectDraft(el){ /* TODO: call /api/task/confirm */ el.parentElement.innerHTML='<span style="color:var(--muted);font-size:10px">Rejected</span>'; }
+
+  // ===== BROWSER AGENT (Max plan only) =====
+  async function startBrowserTask(presetTask){
+    const input = document.getElementById('browser-task-input');
+    const task = presetTask || input?.value.trim();
+    if(!task) return;
+    if(input) input.value = '';
+
+    // Check Max plan
+    const user = await secureGetJSON('ezp_user');
+    const profile = await gP(user.uid || '');
+    if(profile.plan !== 'max' && !isAdmin(user.identifier)){
+      document.getElementById('agent-gate').style.display='block';
+      document.getElementById('agent-content').style.display='none';
+      return;
+    }
+
+    const logEl = document.getElementById('agent-log');
+    const empty = document.getElementById('agent-empty');
+    if(empty) empty.style.display='none';
+
+    // Add task card to log
+    const taskId = 'agent-'+Date.now();
+    logEl.insertAdjacentHTML('beforeend',
+      '<div id="'+taskId+'" style="background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:8px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center">' +
+      '<div style="font-size:13px;font-weight:700">🌐 '+task.replace(/</g,'&lt;').slice(0,80)+'</div>' +
+      '<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700">RUNNING</span>' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-top:6px" id="'+taskId+'-status">Connecting to Claude Sonnet browser agent...</div>' +
+      '</div>'
+    );
+
+    try {
+      const token = fbAuth.currentUser ? await fbAuth.currentUser.getIdToken() : null;
+      const res = await fetch(API_BASE + '/api/agent/browse', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
+        },
+        body: JSON.stringify({ task }),
+        signal: AbortSignal.timeout(120000),
+      });
+
+      const statusEl = document.getElementById(taskId+'-status');
+      const badge = document.querySelector('#'+taskId+' span');
+
+      if (res.ok) {
+        const data = await res.json();
+        if(statusEl) statusEl.innerHTML = data.result || 'Task completed.';
+        if(badge){ badge.textContent='DONE'; badge.style.background='#dcfce7'; badge.style.color='#166534'; }
+      } else {
+        throw new Error('API ' + res.status);
+      }
+    } catch(err) {
+      const statusEl = document.getElementById(taskId+'-status');
+      const badge = document.querySelector('#'+taskId+' span');
+      if(statusEl) statusEl.textContent = 'Backend not connected. Deploy the Python engine to enable browser agents.';
+      if(badge){ badge.textContent='OFFLINE'; badge.style.background='#fee2e2'; badge.style.color='#991b1b'; }
+    }
+  }
+
+  // Show/hide agent gate based on plan
+  document.querySelectorAll('.nav-item[data-screen="agents"]').forEach(n=>{
+    n.addEventListener('click', async ()=>{
+      const user = await secureGetJSON('ezp_user');
+      const profile = await gP(user.uid || '');
+      const hasMax = profile.plan === 'max' || isAdmin(user.identifier);
+      document.getElementById('agent-gate').style.display = hasMax ? 'none' : 'block';
+      document.getElementById('agent-content').style.display = hasMax ? 'block' : 'none';
+    });
+  });
   if(chatInput) chatInput.addEventListener('keydown',e=>{if(e.key==='Enter')sendMsg()});
   document.querySelector('.send-btn')?.addEventListener('click',sendMsg);
   document.querySelectorAll('.context-pill').forEach(p=>{p.addEventListener('click',()=>{p.classList.toggle('active')})});
